@@ -1,7 +1,5 @@
 #!/bin/bash
 set -e
-export CRYFS_FRONTEND=noninteractive
-export CRYFS_NO_UPDATE_CHECK=true
 
 ENC_PATH=/encrypted
 DEC_PATH=/decrypted
@@ -38,7 +36,7 @@ function sigterm_handler {
   echo "sending SIGTERM to child pid"
   kill -SIGTERM ${pid}
   echo "Unmounting: mount ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
-  fusermount -u "${DEC_PATH}"
+  cryfs_unmount "${DEC_PATH}"
   echo "exiting container now"
   exit $?
 }
@@ -75,7 +73,7 @@ wait "${pid}"
 
 echo "cryfs crashed at: $(date +%Y.%m.%d-%T)"
 echo "Unmounting: ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
-fusermount -u "${DEC_PATH}"
+cryfs_unmount "${DEC_PATH}"
 echo "exiting container now"
 
 exit $?
