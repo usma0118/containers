@@ -59,11 +59,11 @@ debug "Running as $_user with UID: $_uid"
 
 debug "Checking files at ${ENC_PATH}"
 ls $ENC_PATH -1a
-#modprobe fuse
+
 unset pid
 if [ ! -z "$PASSWD" ]; then
   debug "mounting ${ENC_PATH} on ${DEC_PATH}"
-  echo "${PASSWD}" | encfs -v --stdinpass -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
+  echo "${PASSWD}" | encfs --stdinpass -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
 else
 	encfs ${ENCFS_OPTS} -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
 fi
