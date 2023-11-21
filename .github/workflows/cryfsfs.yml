@@ -30,5 +30,7 @@ jobs:
       uses: docker/setup-buildx-action@v2
       with:
         install: true
+        
     - name: Build CryFS image
+      working-directory: ./cryfs
       run: docker build . --file cryfs/Dockerfile --tag antaresinc/cryfs$SOURCE_COMMIT
