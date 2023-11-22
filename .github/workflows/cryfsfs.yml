@@ -33,4 +33,4 @@ jobs:
         
     - name: Build CryFS image
       working-directory: ./cryfs
-      run: docker build . --file cryfs/Dockerfile --tag antaresinc/cryfs$SOURCE_COMMIT
+      run: docker build . --file Dockerfile --tag antaresinc/cryfs$SOURCE_COMMIT
