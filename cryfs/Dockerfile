@@ -1,19 +1,21 @@
-FROM alpine:3.9.6 as build
+FROM alpine:3.18.4 as build
 
 # Install CryFS
 ENV CRYFS_VERSION="0.11.4"
 
-RUN apk --no-cache --no-progress upgrade && \    
+RUN apk --no-cache --no-progress upgrade && \
+    apk add --no-cache fuse tini && \
     apk add --no-cache bash curl fuse libgomp libstdc++ openssl tini tzdata shadow su-exec && \
     apk add --no-cache --virtual .build-deps cmake curl-dev fuse-dev g++ gcc git make openssl-dev py3-pip python3 && \
-RUN addgroup -S cryfs && \
+    addgroup -S cryfs && \
     adduser -S -D -H -h /tmp -s /sbin/nologin -G cryfs -g 'CryFS User' cryfsuser && \
     mkdir -p /usr/src/ && \
-    ln -s /usr/bin/python3 /usr/bin/python && \
+    # ln -s /usr/bin/python3 /usr/bin/python && \
     python -m pip install conan versioneer && \
-    git clone -b $CRYFS_VERSION https://github.com/cryfs/cryfs.git /usr/src/cryfs && \
+    git clone --depth 1 -b $CRYFS_VERSION https://github.com/cryfs/cryfs.git /usr/src/cryfs && \
     mkdir /usr/src/cryfs/cmake && \
     cd /usr/src/cryfs/cmake && \
+    conan profile detect && \
     cmake .. && \
     make -j$(nproc) && \
     make install && \
@@ -22,7 +24,7 @@ RUN addgroup -S cryfs && \
     apk del .build-deps && \
     cd / && \
     rm /usr/src/ -rf && \
-	echo user_allow_other >> /etc/fuse.conf
+    echo user_allow_other >> /etc/fuse.conf
 
 
 # Setup Environment
@@ -36,4 +38,4 @@ VOLUME [ "/encrypted", "/decrypted" ]
 
 COPY run.sh /usr/bin/run.sh
 
-CMD [ "/sbin/tini", "--", "/usr/bin/run.sh" ]
+CMD [ "/sbin/tini","-g", "--", "/usr/bin/run.sh" ]
