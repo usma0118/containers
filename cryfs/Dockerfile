@@ -1,7 +1,7 @@
 FROM alpine:3.9.6 as build
 
 # Install CryFS
-ENV CRYFS_VERSION="0.11.3"
+ENV CRYFS_VERSION="0.11.4"
 
 RUN apk --no-cache --no-progress upgrade && \    
     apk add --no-cache bash curl fuse libgomp libstdc++ openssl tini tzdata shadow su-exec && \
