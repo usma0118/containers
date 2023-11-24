@@ -25,3 +25,4 @@ USER secureFS
 # Set the entrypoint and default command
 ENTRYPOINT ["/sbin/tini", "-v", "--"]
 CMD ["/usr/local/bin/run.sh"]
+LABEL org.opencontainers.image.source="https://github.com/usma0118/containers/cryfs"
