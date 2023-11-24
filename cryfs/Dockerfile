@@ -40,7 +40,7 @@ VOLUME [ "/encrypted", "/decrypted" ]
 COPY run.sh /usr/bin/run.sh
 
 USER secrefs
-
-CMD [ "/sbin/tini","-g", "--", "/usr/bin/run.sh" ]
+ENTRYPOINT ["/sbin/tini", "-g", "--"]
+CMD ["/usr/local/bin/run.sh"]
 
 LABEL org.opencontainers.image.source="https://github.com/usma0118/containers/cryfs"
