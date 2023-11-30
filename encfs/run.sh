@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 ENC_PATH=/encrypted
-DEC_PATH=/decrypted
+DEC_PATH=/var/www/localhost/htdocs/galleries/personal
+
+mkdir -p $DEC_PATH
 
 # Define colors
 RED='\033[0;31m'
@@ -35,7 +37,7 @@ function sigterm_handler {
   echo "sending SIGTERM to child pid"
   kill -SIGTERM ${pid}
   echo "Unmounting: mount ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
-  fusermount -u "${DEC_PATH}"
+  fusermount3 -u "${DEC_PATH}"
   echo "exiting container now"
   exit $?
 }
@@ -57,18 +59,15 @@ _user="$(id -u -n)"
 _uid="$(id -u)"
 debug "Running as $_user with UID: $_uid"
 
-debug "Checking files at ${ENC_PATH}"
-ls $ENC_PATH -1a
-
 unset pid
 if [ ! -z "$PASSWD" ]; then
   debug "mounting ${ENC_PATH} on ${DEC_PATH}"
-  echo "${PASSWD}" | encfs --stdinpass -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
+  echo $PASSWD | encfs --stdinpass -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
 else
 	encfs ${ENCFS_OPTS} -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
 fi
+debug "File system mounted"
 wait "${pid}"
-
 
 echo "encfs crashed at: $(date +%Y.%m.%d-%T)"
 echo "Unmounting: ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
