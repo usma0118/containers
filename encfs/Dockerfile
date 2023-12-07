@@ -1,10 +1,10 @@
-FROM alpine:3.18.4 as build
+FROM alpine:3.18.5 as build
 RUN apk add --no-cache git
 WORKDIR /nova
 RUN git clone --depth 1 https://github.com/novafacile/novagallery .\
 && mv src/nova-config/site.example.php src/nova-config/site.php
 
-FROM alpine:3.18.4
+FROM alpine:3.18.5
 
 # Set the maintainer label
 LABEL maintainer=usma0118
