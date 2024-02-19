@@ -1,4 +1,4 @@
-FROM alpine:3.19.0 as build
+FROM alpine:3.19.1 as build
 
 # Install CryFS
 ENV CRYFS_VERSION="0.11.4"
