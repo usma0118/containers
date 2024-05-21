@@ -1,0 +1,26 @@
+FROM ubuntu:23.10
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt update && apt install cryfs fuse tini -y &&\
+    useradd -s /usr/sbin/nologin -m secretfs && passwd -d secretfs &&\
+    echo 'nonroot ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers &&\
+    echo user_allow_other >> /etc/fuse.conf &&\
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+WORKDIR /app
+# Setup Environment
+ENV CRYFS_FRONTEND="noninteractive" \
+    CRYFS_OPTIONS="--create-missing-basedir --create-missing-mountpoint" \
+    MOUNT_OPTIONS="allow_other,noatime,nodiratime" \
+    USERID="1000" \
+    GROUPID="1000"
+ENV TINI_SUBREAPER=""
+VOLUME [ "/encrypted", "/decrypted" ]
+
+COPY run.sh /usr/bin/run.sh
+RUN chmod +x /usr/bin/run.sh
+USER secureFS
+# Set the entrypoint and default command
+USER secrefs
+ENTRYPOINT ["/sbin/tini", "-g", "--"]
+CMD ["/usr/local/bin/run.sh"]
+
+LABEL org.opencontainers.image.source="https://github.com/usma0118/containers/cryfs"
