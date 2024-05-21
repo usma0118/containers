@@ -2,28 +2,32 @@ FROM alpine:3.18.4 as build
 
 # Install CryFS
 ENV CRYFS_VERSION="0.11.4"
-RUN apk add --no-cache \
-    bash\
-    ca-certificates\
-    curl\        
-    fuse3 fuse-dev\
-    linux-headers
-    # libunwind libunwind-dev
+RUN apk add --no-cache\
+      fuse3\
+      openssl\
+      curl\
+      bash
 RUN apk add --no-cache\
     --virtual .build-deps\
-    musl-dev \    
-    clang>=7 make cmake>=3.10 git py3-setuptools py3-pkgconfig\
-    libgomp\
-    libstdc++\
-    procps\
-    #gcc\
-    g++\      
-    fuse-dev\
-    perl\
+    #musl-dev \
+    ca-certificates\
+    linux-headers fuse-dev make cmake>=3.10 git\
+    py3-setuptools\
+    py3-pkgconfig\
     python3\
     python3-dev\
     py3-pip\
-    boost-dev
+    libgomp\
+    libstdc++\
+    procps\
+    #clang>=7
+    gcc>=7\
+    g++\
+    fuse-dev\
+    perl\
+    boost-dev\
+    fmt fmt-dev\
+    openmp
 WORKDIR /usr/src/
 RUN python3 -m pip install\
     versioneer\

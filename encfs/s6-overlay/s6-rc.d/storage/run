@@ -1,0 +1,3 @@
+#!/command/with-contenv bash
+exec /app/run.sh
+#exec s6-setuidgid securefs /app/run.sh

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 ENC_PATH=/encrypted
-DEC_PATH=/var/www/localhost/htdocs/galleries/personal
+DEC_PATH=/decrypted
 
 mkdir -p $DEC_PATH
 
@@ -37,7 +37,7 @@ function sigterm_handler {
   echo "sending SIGTERM to child pid"
   kill -SIGTERM ${pid}
   echo "Unmounting: mount ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
-  fusermount3 -u "${DEC_PATH}"
+  fusermount -u "${ENC_PATH}"
   echo "exiting container now"
   exit $?
 }

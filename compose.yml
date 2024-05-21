@@ -1,0 +1,59 @@
+version: '3'
+services:
+  cryfs:
+    build:
+      context: cryfs
+      dockerfile: old.dockerfile
+    image: docker.io/antaresinc/cryfs:latest
+    user: "${UID}:${GID}"
+    environment:
+          - DEBUG=true
+          - PASSWD=eehwzvHjyLvz3jf!Py_degtU-x
+          - UID= ${UID}
+          - GID= ${GID}
+          - TINI_VERBOSITY=1
+          - TINI_KILL_PROCESS_GROUP=false
+    volumes:
+      - /Users/usma/media/cCloud/.eCloud:/encrypted
+      - /Users/usma/mnt/cCloud/:/decrypted
+    cap_add:
+      - SYS_ADMIN
+    privileged: true
+    devices:
+      - "/dev/fuse:/dev/fuse"
+    security_opt:
+      - apparmor:unconfined
+      # for strace, https://github.com/docker/docker/issues/7276#issuecomment-194137403
+      - "seccomp:unconfined"
+    cap_drop:
+      - All
+  encfs:
+    build:
+      context: encfs
+      dockerfile: ubuntu.Dockerfile
+    image: docker.io/antaresinc/encfs:latest
+    ports:
+      - 8080:80
+    user: "${UID}:${GID}"
+    environment:
+          - DEBUG=true
+          - PASSWD=eehwzvHjyLvz3jf!Py_degtU-x
+          - UID= ${UID}
+          - GID= ${GID}
+          - TINI_VERBOSITY=1
+          - TINI_KILL_PROCESS_GROUP=false
+          # - S6_READ_ONLY_ROOT=1
+    volumes:
+      - /Users/usma/Google Drive/My Drive/eCloud/.personal:/encrypted
+      - /Users/usma/mnt/eCloud/:/decrypted
+    cap_add:
+      - SYS_ADMIN
+    privileged: true
+    devices:
+      - "/dev/fuse:/dev/fuse"
+    security_opt:
+      - apparmor:unconfined
+      # for strace, https://github.com/docker/docker/issues/7276#issuecomment-194137403
+      - "seccomp:unconfined"
+    cap_drop:
+      - All
