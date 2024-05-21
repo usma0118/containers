@@ -20,22 +20,51 @@ RUN apk add --no-cache\
     g++\      
     fuse-dev\
     perl\
-    python3\
+    python3\    
     python3-dev\
     py3-pip\
+    py3-virtualenv\
     boost-dev
+
+RUN apk update && apk add --no-cache \
+bash \
+build-base \
+gcc \
+g++ \
+libc-dev \
+linux-headers \
+python3 \
+py3-pip \
+cmake \
+boost-dev \
+boost-build \
+zlib-dev \
+bzip2-dev \
+zstd-dev \
+icu-dev
+
+# Set environment variables if needed
+ENV CC=gcc
+ENV CXX=g++
+    
 WORKDIR /usr/src/
-RUN python3 -m pip install\
+RUN git clone https://github.com/cryfs/cryfs.git cryfs -q
+RUN virtualenv /usr/src/cryfs/.venv
+ENV VIRTUAL_ENV /usr/src/cryfs/.venv
+ENV PATH $VIRTUAL_ENV:$PATH
+WORKDIR /usr/src/cryfs/build
+RUN . $VIRTUAL_ENV/bin/activate &&\
+    echo "$(which python)" &&\
+    python -m pip install\
     versioneer\
     conan==1.62.0\
-    numpy\
-    && python3 -m pip install --upgrade pip setuptools wheel
-RUN git clone https://github.com/cryfs/cryfs.git cryfs
-WORKDIR /usr/src/cryfs/build
-RUN cmake ..\
-    && make -j$(nproc)\
+    numpy &&\
+    conan config set general.revisions_enabled=1 && \
+    conan profile new default --detect && \
+    conan profile update settings.compiler.libcxx=libstdc++11 default &&\
+    cmake .. && make -j$(nproc)\
     && make install
-RUN python -m pip uninstall -y conan versioneer && \
+    && python -m pip uninstall -y conan versioneer && \
     rm /usr/bin/python && \
     apk del .build-deps
 # FROM alpine:3.18.4
