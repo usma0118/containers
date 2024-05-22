@@ -80,7 +80,8 @@
           cache-from: |
             type=gha
           cache-to: type=gha,mode=max
-      - name: Generate artifact attestation
+      - if: ${{ github.event_name != 'pull_request' }}
+        name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
         id: attest
         with:
