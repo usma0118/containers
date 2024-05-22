@@ -20,9 +20,9 @@ VOLUME [ "/encrypted", "/decrypted" ]
 COPY run.sh /usr/bin/run.sh
 RUN chmod +x /usr/bin/run.sh
 # Set the entrypoint and default command
-USER secrefs
+USER nobody:nobody
 ENTRYPOINT ["/usr/bin/tini", "-g", "--"]
-CMD ["/usr/local/bin/run.sh"]
+CMD ["/usr/bin/run.sh"]
 
 # Set the maintainer label
 LABEL maintainer=usma0118
