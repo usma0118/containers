@@ -58,9 +58,6 @@ _user="$(id -u -n)"
 _uid="$(id -u)"
 debug "Running as $_user with UID: $_uid"
 
-debug "Checking files at ${ENC_PATH}"
-ls $ENC_PATH -1a
-
 unset pid
 if [ ! -z "$PASSWD" ]; then
   debug "mounting ${ENC_PATH} on ${DEC_PATH}"
