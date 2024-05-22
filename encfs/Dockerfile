@@ -3,7 +3,9 @@ FROM alpine:3.19.1
 # Set the maintainer label
 LABEL maintainer=usma0118
 LABEL org.opencontainers.image.source="https://github.com/usma0118/containers/encfs"
-
+LABEL org.opencontainers.image.description="Docker container for encfs"
+LABEL org.opencontainers.image.url=https://github.com/usma0118/containers/encfs
+LABEL org.opencontainers.image.source=https://github.com/usma0118/containers/encfs
 # Install dependencies and remove cache
 RUN apk add --no-cache libc6-compat fuse3 encfs tini bash rclone && \
 rm -rf /var/cache/apk/* && \
