@@ -1,6 +1,6 @@
 ---
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-name: "cryfs container - Build & release"
+name: "Encfs container - Build & release"
 on:
   workflow_dispatch:
     inputs:
@@ -15,10 +15,10 @@ on:
         - debug
   push:
     branches: ["main"]
-    paths: ["cryfs/**"]
+    paths: ["encfs/**"]
   pull_request:
     branches: ["main"]
-    paths: ["cryfs/**"]
+    paths: ["encfs/**"]
   release:
     types: [published]
 concurrency:
@@ -49,6 +49,6 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build CryFS image
-      working-directory: ./cryfs
-      run: docker build . --file Dockerfile --tag antaresinc/cryfs$SOURCE_COMMIT
+    - name: Build EncFS image
+      working-directory: ./encfs
+      run: docker build . --file Dockerfile --tag antaresinc/encfs$SOURCE_COMMIT
