@@ -1,4 +1,11 @@
 FROM ubuntu:24.04
+
+# Set the maintainer label
+LABEL maintainer=usma0118
+LABEL org.opencontainers.image.description="Docker container for cryfs"
+LABEL org.opencontainers.image.url="https://github.com/usma0118/containers/cryfs"
+LABEL org.opencontainers.image.source="https://github.com/usma0118/containers/cryfs"
+
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get --no-install-recommends install -y build-essential
 RUN apt-get --no-install-recommends install cryfs fuse tini -y &&\
@@ -22,5 +29,3 @@ RUN chmod +x /usr/bin/run.sh
 USER secrefs
 ENTRYPOINT ["/sbin/tini", "-g", "--"]
 CMD ["/usr/local/bin/run.sh"]
-
-LABEL org.opencontainers.image.source="https://github.com/usma0118/containers/cryfs"
