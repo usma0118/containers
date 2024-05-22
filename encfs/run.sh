@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 ENC_PATH=/encrypted
-DEC_PATH=/var/www/localhost/htdocs/galleries/personal
+DEC_PATH=/decrypted
 
 mkdir -p $DEC_PATH
 
@@ -15,6 +15,10 @@ RESET='\033[0m'
 # Debug function with colorized output
 debug() {
   echo -e "${BLUE}[DEBUG] ${1}${RESET}"
+}
+
+info() {
+  echo -e "${GREEN}[DEBUG] ${1}${RESET}"
 }
 
 mask_string() {
@@ -60,18 +64,25 @@ _uid="$(id -u)"
 debug "Running as $_user with UID: $_uid"
 
 unset pid
+
+
+if [ ! -f "$ENC_PATH/.encfs6.xml" ]; then
+  info "$ENC_PATH is not valid encfs volume"
+  sleep infinity
+fi
+
 if [ ! -z "$PASSWD" ]; then
   debug "mounting ${ENC_PATH} on ${DEC_PATH}"
   echo $PASSWD | encfs --stdinpass -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
 else
+  debug "mounting without password"
 	encfs ${ENCFS_OPTS} -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
 fi
-debug "File system mounted"
 wait "${pid}"
 
-echo "encfs crashed at: $(date +%Y.%m.%d-%T)"
-echo "Unmounting: ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
+info "encfs crashed at: $(date +%Y.%m.%d-%T)"
+info "Unmounting: ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
 fusermount -u "${DEC_PATH}"
-echo "exiting container now"
+info "exiting container now"
 
 exit $?
