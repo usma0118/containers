@@ -1,15 +1,15 @@
 #!/bin/bash
 set -e
-
-ENC_PATH=/encrypted
-DEC_PATH=/decrypted
+set -o nounset
+declare -r ENC_PATH=/encrypted
+declare -r DEC_PATH=/decrypted
 
 # Define colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-RESET='\033[0m'
+declare -r RED='\033[0;31m'
+declare -r GREEN='\033[0;32m'
+declare -r YELLOW='\033[0;33m'
+declare -r BLUE='\033[0;34m'
+declare -r RESET='\033[0m'
 
 # Debug function with colorized output
 debug() {
@@ -62,19 +62,17 @@ function sighup_handler {
 trap sigterm_handler SIGINT SIGTERM
 trap sighup_handler SIGHUP
 
-debug "$(mask_string "$PASSWD")"
-
 _user="$(id -u -n)"
 _uid="$(id -u)"
 debug "Running as $_user with UID: $_uid"
-
+sleep infinity
 unset pid
 if [ ! -z "$PASSWD" ]; then
-  debug "mounting ${ENC_PATH} on ${DEC_PATH}"
+  info "mounting ${ENC_PATH} on ${DEC_PATH} with password: "$(mask_string "$PASSWD", "*")""
   echo "${PASSWD}" | cryfs -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
 else
 	cryfs ${ENCFS_OPTS} -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
-  info "mounting ${ENC_PATH} on ${DEC_PATH}"
+  info "mounting ${ENC_PATH} on ${DEC_PATH} without password"
 fi
 wait "${pid}"
 
