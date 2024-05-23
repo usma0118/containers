@@ -65,7 +65,6 @@ trap sighup_handler SIGHUP
 _user="$(id -u -n)"
 _uid="$(id -u)"
 debug "Running as $_user with UID: $_uid"
-sleep infinity
 unset pid
 if [ ! -z "$PASSWD" ]; then
   info "mounting ${ENC_PATH} on ${DEC_PATH} with password: "$(mask_string "$PASSWD", "*")""
