@@ -13,7 +13,17 @@ RESET='\033[0m'
 
 # Debug function with colorized output
 debug() {
-  echo -e "${BLUE}[DEBUG] ${1}${RESET}"
+  echo -e "${BLUE}[DEBUG]${YELLOW} ${1}${RESET}"
+}
+
+# Debug function with colorized output
+error() {
+  echo -e "${RED}[ERROR]${YELLOW} ${1}${RESET}"
+}
+
+# Debug function with colorized output
+info() {
+  echo -e "${GREEN} ${1}${RESET}"
 }
 
 mask_string() {
@@ -33,17 +43,17 @@ mask_string() {
 }
 
 function sigterm_handler {
-  echo "sending SIGTERM to child pid"
+  info "sending SIGTERM to child pid"
   kill -SIGTERM ${pid}
-  echo "Unmounting: mount ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
+  info "Unmounting: mount ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
   cryfs_unmount "${DEC_PATH}"
-  echo "exiting container now"
+  info "exiting container now"
   exit $?
 }
 
 
 function sighup_handler {
-    echo "sending SIGHUP to child pid"
+    info "sending SIGHUP to child pid"
     kill -SIGHUP ${pid}
     wait ${pid}
 }
@@ -61,16 +71,17 @@ debug "Running as $_user with UID: $_uid"
 unset pid
 if [ ! -z "$PASSWD" ]; then
   debug "mounting ${ENC_PATH} on ${DEC_PATH}"
-  echo "${PASSWD}" | cryfs --stdinpass -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
+  echo "${PASSWD}" | cryfs -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
 else
 	cryfs ${ENCFS_OPTS} -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
+  info "mounting ${ENC_PATH} on ${DEC_PATH}"
 fi
 wait "${pid}"
 
 
-echo "cryfs crashed at: $(date +%Y.%m.%d-%T)"
-echo "Unmounting: ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
+error "cryfs crashed at: $(date +%Y.%m.%d-%T)"
+info "Unmounting: ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
 cryfs_unmount "${DEC_PATH}"
-echo "exiting container now"
+info "exiting container now"
 
 exit $?

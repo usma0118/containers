@@ -1,6 +1,14 @@
 FROM ubuntu:24.04
-
-ENV DEBIAN_FRONTEND=noninteractive
+# Setup Environment
+ENV CRYFS_FRONTEND="noninteractive" \
+    CRYFS_OPTIONS="--create-missing-basedir --create-missing-mountpoint" \
+    MOUNT_OPTIONS="allow_other,noatime,nodiratime" \
+    USERID="1000" \
+    GROUPID="1000" \
+    CRYFS_FRONTEND=noninteractive \
+    CRYFS_NO_UPDATE_CHECK=true \
+    TINI_SUBREAPER="" \
+    DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get --no-install-recommends install -y build-essential
 RUN apt-get --no-install-recommends install cryfs fuse tini -y &&\
     useradd -s /usr/sbin/nologin -m secretfs && passwd -d secretfs &&\
@@ -8,19 +16,12 @@ RUN apt-get --no-install-recommends install cryfs fuse tini -y &&\
     echo user_allow_other >> /etc/fuse.conf &&\
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 WORKDIR /app
-# Setup Environment
-ENV CRYFS_FRONTEND="noninteractive" \
-    CRYFS_OPTIONS="--create-missing-basedir --create-missing-mountpoint" \
-    MOUNT_OPTIONS="allow_other,noatime,nodiratime" \
-    USERID="1000" \
-    GROUPID="1000"
-ENV TINI_SUBREAPER=""
 VOLUME [ "/encrypted", "/decrypted" ]
 
 COPY run.sh /usr/bin/run.sh
 RUN chmod +x /usr/bin/run.sh
-# Set the entrypoint and default command
 USER nobody:nobody
+# Set the entrypoint and default command
 ENTRYPOINT ["/usr/bin/tini", "-g", "--"]
 CMD ["/usr/bin/run.sh"]
 
