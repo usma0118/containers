@@ -65,7 +65,7 @@
             type=sha,format=short
           flavor: |
             latest=auto
-            prefix=
+            prefix=alpine
             suffix=
       - name: Build and push
         id: docker_build
