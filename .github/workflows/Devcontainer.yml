@@ -65,13 +65,13 @@
             type=sha,format=short
           flavor: |
             latest=auto
-            prefix=alpine
+            prefix=alpine-
             suffix=
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v5
         with:
-          context: "{{defaultContext}}:cryfs"
+          context: "{{defaultContext}}:.devcontainer/base"
           sbom: true
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
