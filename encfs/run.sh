@@ -14,16 +14,22 @@ RESET='\033[0m'
 
 # Debug function with colorized output
 debug() {
-  echo -e "${BLUE}[DEBUG] ${1}${RESET}"
+    if [ -n "$DEBUG" ]; then
+      echo -e "${BLUE}[DEBUG] ${YELLOW} ${1}${RESET}"
+    fi
 }
 
 info() {
-  echo -e "${GREEN}[DEBUG] ${1}${RESET}"
+  echo -e "${GREEN}${1}${RESET}"
+}
+
+error() {
+  echo -e "${RED}[ERROR] ${1}${RESET}"
 }
 
 mask_string() {
   local str="$1"
-  local mask_char="$2"
+  local mask_char="$2-=*"
   local masked_str=""
 
   for (( i=0; i<${#str}; i++ )); do
@@ -50,6 +56,7 @@ function sigterm_handler {
 function sighup_handler {
     echo "sending SIGHUP to child pid"
     kill -SIGHUP ${pid}
+    echo "exiting..."
     wait ${pid}
 }
 
@@ -68,7 +75,7 @@ unset pid
 
 if [ ! -f "$ENC_PATH/.encfs6.xml" ]; then
   info "$ENC_PATH is not valid encfs volume"
-  sleep infinity
+  exit $?
 fi
 
 if [ ! -z "$PASSWD" ]; then
@@ -78,11 +85,10 @@ else
   debug "mounting without password"
 	encfs ${ENCFS_OPTS} -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
 fi
+info "Process: ${pid} started successfully"
 wait "${pid}"
 
-info "encfs crashed at: $(date +%Y.%m.%d-%T)"
+error "encfs crashed at: $(date +%Y.%m.%d-%T)"
 info "Unmounting: ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
 fusermount -u "${DEC_PATH}"
-info "exiting container now"
-
 exit $?
