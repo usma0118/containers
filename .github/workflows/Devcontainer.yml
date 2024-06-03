@@ -29,13 +29,12 @@
     REGISTRY: ghcr.io
     IMAGE_NAME: ${{ github.repository }}/devcontainers/base
   jobs:
-    build-docker-image:
+    Devcontainer-build-jobs:
       runs-on: ubuntu-latest
       permissions:
         contents: read
         packages: write
         id-token: write
-        attestations: write
       strategy:
         fail-fast: true
       steps:
@@ -77,6 +76,6 @@
           # cacheFrom: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
           imageTag: ${{ steps.meta.outputs.tags }}
           # imageLabel: ${{ steps.meta.outputs.labels }}
-          platform: linux/amd64 #,linux/arm64
+          platform: linux/amd64,linux/arm64
           configFile: ".devcontainer/base/devcontainer.json"
           push: ${{ github.event_name == 'pull_request' && 'never' || 'always' }}
