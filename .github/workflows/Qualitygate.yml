@@ -1,4 +1,4 @@
-name: Quality gate
+name: Sonar Quality Gate
 on:
   pull_request:
     types: [opened, synchronize, reopened]

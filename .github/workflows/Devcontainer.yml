@@ -73,7 +73,7 @@
           BUILDX_NO_DEFAULT_ATTESTATIONS: true
         with:
           imageName: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-          # cacheFrom: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          cacheFrom: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
           # imageTag: ${{ steps.meta.outputs.tags }}
           # imageLabel: ${{ steps.meta.outputs.labels }}
           platform: linux/amd64,linux/arm64
