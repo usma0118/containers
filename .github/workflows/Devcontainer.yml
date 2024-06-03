@@ -58,7 +58,7 @@
         id: meta
         uses: docker/metadata-action@f7b4ed12385588c3f9bc252f0a2b520d83b52d48
         with:
-          images: ${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -74,7 +74,7 @@
         with:
           imageName: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
           # cacheFrom: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-          imageTag: ${{ steps.meta.outputs.tags }}
+          # imageTag: ${{ steps.meta.outputs.tags }}
           # imageLabel: ${{ steps.meta.outputs.labels }}
           platform: linux/amd64,linux/arm64
           configFile: ".devcontainer/base/devcontainer.json"
