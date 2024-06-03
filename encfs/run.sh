@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 ENC_PATH=/encrypted
 DEC_PATH=/decrypted
@@ -45,7 +45,7 @@ mask_string() {
 
 function sigterm_handler {
   echo "sending SIGTERM to child pid"
-  kill -SIGTERM ${pid}
+  kill -s -SIGTERM ${pid}
   echo "Unmounting: mount ${DEC_FOLDER} at: $(date +%Y.%m.%d-%T)"
   fusermount3 -u "${DEC_PATH}"
   echo "exiting container now"
@@ -55,7 +55,7 @@ function sigterm_handler {
 
 function sighup_handler {
     echo "sending SIGHUP to child pid"
-    kill -SIGHUP ${pid}
+    kill -s -SIGHUP ${pid}
     echo "exiting..."
     wait ${pid}
 }
@@ -72,10 +72,9 @@ debug "Running as $_user with UID: $_uid"
 
 unset pid
 
-
 if [ ! -f "$ENC_PATH/.encfs6.xml" ]; then
   info "$ENC_PATH is not valid encfs volume"
-  exit $?
+  exit 1
 fi
 
 if [ ! -z "$PASSWD" ]; then
