@@ -1,0 +1,7 @@
+{
+    "ansible.python.interpreterPath": "/home/vscode/.venv/bin/python",
+    "terminal.integrated.fontFamily": "MesloLGS NF",
+    "dotfiles.repository": "usma0118/dotfiles",
+    "dotfiles.targetPath": "~/.dotfiles",
+    "dotfiles.installCommand": "~/.dotfiles/bootstrap.sh",
+}
