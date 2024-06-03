@@ -1,4 +1,13 @@
 FROM mcr.microsoft.com/devcontainers/base:alpine-3.19
+
+# Set the maintainer label
+LABEL maintainer=usma0118
+LABEL org.opencontainers.image.description="Docker container"
+LABEL org.opencontainers.image.url="https://github.com/usma0118/containers/.devcontainer/base"
+LABEL org.opencontainers.image.source="https://github.com/usma0118/containers/.devcontainer/base"
+LABEL org.opencontainers.image.title="devcontainer"
+
+
 ENV PYTHONUNBUFFERED 1
 ARG USERNAME=vscode
 

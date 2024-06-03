@@ -14,9 +14,10 @@
           - warning
           - debug
     push:
-      branches: ["main"]
+      branches: 
+        - "main"
       tags:
-        - '**'
+        - 'v**'
       paths: [".devcontainer/base/**"]
     pull_request:
       branches: ["main"]
@@ -67,20 +68,7 @@
             latest=auto
             prefix=alpine-
             suffix=
-      - name: Build and push
-        id: docker_build
-        uses: docker/build-push-action@v5
-        with:
-          context: "{{defaultContext}}:.devcontainer/base"
-          sbom: true
-          platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: |
-            type=gha
-          cache-to: type=gha,mode=max
-      - name: Build and push
+      - name: Build and push via devcontainer action
         uses: devcontainers/ci@v0.3
         env:
           BUILDX_NO_DEFAULT_ATTESTATIONS: true
@@ -88,6 +76,7 @@
           imageName: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
           cacheFrom: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
           imageTag: ${{ steps.meta.outputs.tags }}
+          # imageLabel: ${{ steps.meta.outputs.labels }}
           platform: linux/amd64 #,linux/arm64
           configFile: ".devcontainer/base/devcontainer.json"
           push: ${{ github.event_name == 'pull_request' && 'never' || 'always' }}
