@@ -1,0 +1,42 @@
+{
+    "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+    "name": "DevContainer base image",
+    "build": {
+        "dockerfile": "./Dockerfile",
+        "context": "."
+      },
+    "customizations": {
+      "vscode": {
+        "settings": {
+          // "dev.containers.copyGitConfig": true,
+          "editor.tabSize": 4,
+          "terminal.integrated.defaultProfile.linux": "zsh",
+          "terminal.integrated.profiles.linux": {
+            "bash": {
+              "path": "bash",
+              "icon": "terminal-bash"
+            },
+            "zsh": {
+              "path": "zsh"
+            }
+          }
+        },
+        "extensions": [
+            "redhat.ansible",
+            "redhat.vscode-yaml",
+            "mhutchie.git-graph",
+            "eamodio.gitlens",
+            "github.vscode-github-actions",
+            "johnpapa.vscode-peacock",
+            "timonwong.shellcheck",
+            "robertz.code-snapshot",
+            "PKief.material-icon-theme",
+            "mkhl.direnv",
+            "adamhartford.vscode-base64",
+            "ms-python.python",
+            "ms-python.debugpy",
+            "ms-python.isort"
+        ]
+      }
+    }
+  }
