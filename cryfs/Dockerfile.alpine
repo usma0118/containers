@@ -63,7 +63,7 @@ RUN . $VIRTUAL_ENV/bin/activate &&\
     conan profile new default --detect && \
     conan profile update settings.compiler.libcxx=libstdc++11 default &&\
     cmake .. && make -j$(nproc)\
-    && make install
+    && make install \
     && python -m pip uninstall -y conan versioneer && \
     rm /usr/bin/python && \
     apk del .build-deps
