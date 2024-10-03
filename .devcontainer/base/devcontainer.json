@@ -25,7 +25,6 @@
             "redhat.ansible",
             "redhat.vscode-yaml",
             "mhutchie.git-graph",
-            "eamodio.gitlens",
             "github.vscode-github-actions",
             "johnpapa.vscode-peacock",
             "timonwong.shellcheck",
