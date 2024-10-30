@@ -78,5 +78,6 @@ RUN mkdir -p /home/$USERNAME/.vscode-server/extensions \
         /home/$USERNAME/.oh-my-zsh/custom/plugins &&\
         SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/home/$USERNAME/.history/.bash_history" >> "/home/$USERNAME/.bashrc" &&\
         echo "export PROMPT_COMMAND='history -a' && export HISTFILE=/home/$USERNAME/.history/.zsh_history" >> "/home/$USERNAME/.zsh_history"
-
-RUN echo "Pre-Loading zsh" && zsh -i -c "exit"
+RUN git clone https://github.com/usma0118/dotfiles /home/$USERNAME/.dotfiles --depth 1
+RUN $HOME/.dotfiles/bootstrap.sh
+# RUN echo "Pre-Loading zsh" && zsh -i -c "exit"
