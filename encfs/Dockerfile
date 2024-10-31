@@ -1,4 +1,4 @@
-FROM alpine:3.19.1
+FROM alpine:3.20.3
 
 # Set the maintainer label
 LABEL maintainer=usma0118
