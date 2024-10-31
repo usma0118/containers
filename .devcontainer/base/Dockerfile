@@ -10,6 +10,7 @@ LABEL org.opencontainers.image.title="devcontainer"
 
 ENV PYTHONUNBUFFERED 1
 ARG USERNAME=vscode
+ENV USER $USERNAME
 
 RUN apk add --no-cache \
     zsh \
@@ -41,7 +42,6 @@ tee /home/$USERNAME/.config/direnv/direnv.toml > /dev/null <<EOF
 prefix = [ "/workspaces", "/home/vscode/.dotfiles" ]
 EOF
 
-WORKDIR /workspaces
 RUN virtualenv /home/$USERNAME/.venv &&\
     git config --global --add safe.directory /workspaces/dotfiles &&\
     git config --global --add safe.directory /home/$USERNAME/.dotfiles
@@ -61,9 +61,7 @@ RUN mkdir /home/$USERNAME/.fonts \
 # Download powerlevel10k
 && git clone https://github.com/romkatv/powerlevel10k.git /home/$USERNAME/.oh-my-zsh/custom/themes/powerlevel10k --depth=1 \
 # Download powerlevel10k config
-&& curl -sLo /home/$USERNAME/.p10k.zsh https://raw.githubusercontent.com/usma0118/dotfiles/HEAD/zshrc/themes/dev.p10k.zsh \
-&& curl -sLo /home/$USERNAME/.zsh https://raw.githubusercontent.com/usma0118/dotfiles/HEAD/.profile/.zshrc \
-&& curl -sLo /home/$USERNAME/.aliases https://raw.githubusercontent.com/usma0118/dotfiles/HEAD/.profile/.aliases
+&& curl -sLo /home/$USERNAME/.p10k.zsh https://raw.githubusercontent.com/usma0118/dotfiles/HEAD/zshrc/themes/dev.p10k.zsh
 
 RUN mkdir -p /home/$USERNAME/.vscode-server/extensions \
         /home/$USERNAME/.cache \
@@ -78,7 +76,9 @@ RUN mkdir -p /home/$USERNAME/.vscode-server/extensions \
         /home/$USERNAME/.oh-my-zsh/custom/plugins &&\
         SNIPPET="export PROMPT_COMMAND='history -a' && export HISTFILE=/home/$USERNAME/.history/.bash_history" >> "/home/$USERNAME/.bashrc" &&\
         echo "export PROMPT_COMMAND='history -a' && export HISTFILE=/home/$USERNAME/.history/.zsh_history" >> "/home/$USERNAME/.zsh_history"
-ENV ANSIBLE_DEBUG=True        
+
 RUN git clone https://github.com/usma0118/dotfiles /home/$USERNAME/.dotfiles --depth 1
-RUN /home/$USERNAME/.dotfiles/bootstrap.sh
-# RUN echo "Pre-Loading zsh" && zsh -i -c "exit"
+WORKDIR /home/$USERNAME/.dotfiles
+RUN . $VIRTUAL_ENV/bin/activate && bash bootstrap.sh
+WORKDIR /workspaces
+RUN echo "Pre-Loading zsh" && zsh -i -c "exit"

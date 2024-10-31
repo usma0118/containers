@@ -10,9 +10,9 @@
       "remoteUser": "vscode",
       "containerUser": "vscode",
       "updateRemoteUserUID": true,
-        "features": {
-      "ghcr.io/audacioustux/devcontainers/cilium:1": {"version":"1.0.0"}
-    },   
+    //     "features": {
+    //   "ghcr.io/audacioustux/devcontainers/cilium:1": {"version":"1.0.0"}
+    // },
     "customizations": {
       "vscode": {
         "settings": {
