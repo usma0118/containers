@@ -13,6 +13,12 @@
     //     "features": {
     //   "ghcr.io/audacioustux/devcontainers/cilium:1": {"version":"1.0.0"}
     // },
+    "features": {
+      "ghcr.io/eitsupi/devcontainer-features/go-task:1": {},
+      "ghcr.io/dhoeric/features/stern:1": {},
+      "ghcr.io/goldsam/dev-container-features/flux2:1": {},
+      "ghcr.io/audacioustux/devcontainers/kustomize:1": {}
+    },
     "customizations": {
       "vscode": {
         "settings": {

@@ -15,7 +15,7 @@ ENV USER $USERNAME
 RUN apk add --no-cache \
     zsh \
     ca-certificates curl wget gettext sshpass \
-    fzf jq git openssh-client \
+    fzf jq git yq openssh-client \
     go-task \
     python3 py3-pip py3-virtualenv\
     git direnv shellcheck\
