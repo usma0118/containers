@@ -66,6 +66,10 @@ RUN set -eux; \
       "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-${target}"; \
     chmod +x "/home/${USERNAME}/.local/bin/hadolint"
 
+# Global CLI tools via pipx (installed into ~/.local/pipx envs; shims in ~/.local/bin)
+RUN set -euxo pipefail; \
+  pipx install ansible-lint
+
 # Switch to non-root; user-scoped setup from here
 USER ${USERNAME}
 
@@ -78,10 +82,6 @@ RUN set -euxo pipefail; \
   if [ -x "${VIRTUAL_ENV}/bin/python" ]; then \
     python -m pip install --no-cache-dir --upgrade pip setuptools wheel; \
   fi
-
-# Global CLI tools via pipx (installed into ~/.local/pipx envs; shims in ~/.local/bin)
-RUN set -euxo pipefail; \
-  pipx install ansible-lint
 
 # direnv config (user scope)
 RUN set -euxo pipefail; \
