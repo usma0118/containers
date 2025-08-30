@@ -56,23 +56,19 @@ RUN set -euxo pipefail; \
 # Install hadolint (static musl build)=
 ARG HADOLINT_VERSION=2.12.0
 RUN set -eux; \
-    mkdir -p "${HOME}/.local/bin"; \
+    # write to system path, not $HOME
     case "$(uname -m)" in \
       x86_64)  target="x86_64" ;; \
       aarch64) target="arm64"  ;; \
       *) echo "Unsupported arch: $(uname -m)" >&2; exit 1 ;; \
     esac; \
-    curl -fsSL -o "${HOME}/.local/bin/hadolint" \
+    curl -fsSL -o /usr/local/bin/hadolint \
       "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-${target}"; \
-    chmod +x "${HOME}/.local/bin/hadolint"
+    chmod +x /usr/local/bin/hadolint
 
 
 # Switch to non-root; user-scoped setup from here
 USER ${USERNAME}
-# Ensure the directory is created and owned by vscode
-RUN mkdir -p ${HOME}/.local/state/pipx/log
-#\
-# && chown -R $USERNAME:$USERNAME ${HOME}/.local
 
 # Global CLI tools via pipx (installed into ~/.local/pipx envs; shims in ~/.local/bin)
 RUN set -euxo pipefail; \
@@ -124,8 +120,7 @@ RUN set -euxo pipefail; \
   curl -fsSL -o "${HOME}/.p10k.zsh" https://raw.githubusercontent.com/usma0118/dotfiles/HEAD/zshrc/themes/dev.p10k.zsh
 
 # Dotfiles bootstrap (non-interactive; tolerate no-op)
-RUN set -euxo pipefail; \
-  git config --global --add safe.directory "${HOME}/.dotfiles"; \
+RUN git config --global --add safe.directory "${HOME}/.dotfiles"; \
   git clone --depth=1 https://github.com/usma0118/dotfiles "${HOME}/.dotfiles" || true; \
   sh -lc "cd '${HOME}/.dotfiles' && bash bootstrap.sh" || true
 
