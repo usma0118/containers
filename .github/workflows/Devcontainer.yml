@@ -3,14 +3,7 @@
 name: Devcontainer
 
 on:
-  workflow_dispatch:
-    inputs:
-      logLevel:
-        description: Log level
-        required: true
-        default: warning
-        type: choice
-        options: [info, warning, debug]
+  workflow_dispatch: {}
   push:
     branches: [main]
     tags: ['v**']
@@ -19,7 +12,7 @@ on:
     branches: [main]
     paths: [".devcontainer/base/**"]
   schedule:
-    - cron: "0 3 * * 1" # Mondays 03:00 UTC
+    - cron: "0 3 * * 1"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
@@ -54,39 +47,40 @@ jobs:
             network=host
 
       - if: ${{ github.event_name != 'pull_request' }}
-        name: Login to GitHub Container Registry
+        name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha,format=short
-            type=raw,value=latest,enable={{is_default_branch}}
-          flavor: |
-            prefix=alpine-,onlatest=true
+      # Compute *bare* tags for devcontainers/ci
+      - name: Compute tags
+        id: tags
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHORT_SHA="${GITHUB_SHA::7}"
+          TAGS="alpine-sha-${SHORT_SHA}"
+          if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+            TAGS="alpine-latest,${TAGS}"
+          fi
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VER="${GITHUB_REF#refs/tags/}"
+            MAJMIN="${VER%.*}"
+            TAGS="alpine-${VER},alpine-${MAJMIN},alpine-latest,${TAGS}"
+          fi
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push via Dev Containers CI
         uses: devcontainers/ci@v0.3
         env:
-          # disable provenance/attestations that can cause buildx errors on some runners
           BUILDX_NO_DEFAULT_ATTESTATIONS: true
         with:
-          # Use devcontainer.json from the base folder
           configFile: ".devcontainer/base/devcontainer.json"
           imageName: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          imageTag: ${{ steps.meta.outputs.tags }}
-          imageLabel: ${{ steps.meta.outputs.labels }}
+          imageTag: ${{ steps.tags.outputs.tags }}   # bare tags only
           platform: ${{ env.PLATFORMS }}
           push: ${{ github.event_name == 'pull_request' && 'never' || 'always' }}
-          # Use registry cache (separate tag)
           cacheFrom: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache
-          cacheTo: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache
+          cacheTo:   ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache
