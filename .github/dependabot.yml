@@ -10,3 +10,22 @@ updates:
    directory: "/"
    schedule:
      interval: weekly
+# Python (Poetry/pyproject.toml & poetry.lock supported via 'pip' ecosystem)
+  - package-ecosystem: "pip"
+    directory: "/"               # adjust if your pyproject lives elsewhere
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "04:10"
+    allow:
+      - dependency-type: "all"
+    versioning-strategy: increase
+    open-pull-requests-limit: 10
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "sunday"
+      time: "04:20"
