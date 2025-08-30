@@ -3,7 +3,11 @@
   "name": "DevContainer base image",
   "build": {
     "dockerfile": "./Dockerfile",
-    "context": "."
+    "context": ".",
+    "args": {
+      "GITHUB_TOKEN": "${env:GITHUB_TOKEN}",
+      "GH_TOKEN": "${env:GITHUB_TOKEN}"
+    }
   },
   "runArgs": ["--userns=keep-id"],
   "remoteUser": "vscode",
