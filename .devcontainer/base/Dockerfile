@@ -106,6 +106,18 @@ RUN set -euxo pipefail; \
   git clone --depth=1 https://github.com/romkatv/powerlevel10k.git          "${HOME}/.oh-my-zsh/custom/themes/powerlevel10k"; \
   curl -fsSL -o "${HOME}/.p10k.zsh" https://raw.githubusercontent.com/usma0118/dotfiles/HEAD/zshrc/themes/dev.p10k.zsh
 
+# Install hadolint (static musl build)
+ARG HADOLINT_VERSION=2.12.0
+RUN set -euxo pipefail; \
+    arch="$(uname -m)"; \
+    case "$arch" in \
+      x86_64)  target="x86_64" ;; \
+      aarch64) target="arm64" ;; \
+      *) echo "Unsupported arch: $arch" >&2; exit 1 ;; \
+    esac; \
+    url="https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-${target}"; \
+    curl -fsSL "$url" -o /usr/local/bin/hadolint; \
+    chmod +x /usr/local/bin/hadolint
 # Dotfiles bootstrap (non-interactive; tolerate no-op)
 RUN set -euxo pipefail; \
   git config --global --add safe.directory "${HOME}/.dotfiles"; \
