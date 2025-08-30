@@ -17,9 +17,9 @@
     "ghcr.io/devcontainers-extra/features/ansible:2": {},
     "ghcr.io/eitsupi/devcontainer-features/go-task:1": {},
     "ghcr.io/devcontainers-extra/features/helmfile:1": {},
+    "ghcr.io/dhoeric/features/hadolint:1": {},
     "ghcr.io/devcontainers-extra/features/kubectl-asdf:2": {},
     "ghcr.io/devcontainers-extra/features/sops:1": {},
-    "ghcr.io/devcontainers-extra/features/hadoop-sdkman:2": {},
     "ghcr.io/devcontainers-extra/features/poetry:2": {}
   },
   "postStartCommand": "pre-commit install",
