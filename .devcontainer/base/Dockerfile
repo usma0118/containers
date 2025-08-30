@@ -28,6 +28,7 @@ RUN set -euxo pipefail; \
     zsh ca-certificates curl wget gettext sshpass \
     fzf jq git yq openssh-client \
     python3 py3-pip \
+    task \
     age
 
 # Install pipx in an isolated venv (PEP 668-safe) and expose it on PATH
