@@ -1,0 +1,34 @@
+{
+  "recommendations": [
+    "adamhartford.vscode-base64",
+    "esbenp.prettier-vscode",
+    "github.vscode-github-actions",
+    "exiasr.hadolint",
+    "johnpapa.vscode-peacock",
+    "mhutchie.git-graph",
+    "mitchdenny.ecdc",
+    "mkhl.direnv",
+    "ms-python.debugpy",
+    "ms-python.isort",
+    "ms-python.python",
+    "PKief.material-icon-theme",
+    "redhat.ansible",
+    "redhat.vscode-yaml",
+    "richie5um2.vscode-sort-json",
+    "robertz.code-snapshot",
+    "timonwong.shellcheck",
+    "zainchen.json"
+  ],
+  "unwantedRecommendations": [
+    "ms-python.vscode-pylance",
+    "ms-toolsai.jupyter",
+    "ms-vscode.cpptools",
+    "ms-vscode.cmake-tools",
+    "ms-vscode.powershell",
+    "ms-vscode.node-debug2",
+    "redhat.java",
+    "vscjava.vscode-java-pack",
+    "ms-azuretools.vscode-docker",
+    "ms-vscode-remote.remote-containers"
+  ]
+}

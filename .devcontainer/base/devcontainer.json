@@ -1,53 +1,37 @@
 {
-    "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
-    "name": "DevContainer base image",
-    "build": {
-        "dockerfile": "./Dockerfile",
-        "context": "."
-      }    ,"runArgs": [
-        "--userns=keep-id"
-      ],
-      "remoteUser": "vscode",
-      "containerUser": "vscode",
-      "updateRemoteUserUID": true,
-
-    "features": {
-      "ghcr.io/eitsupi/devcontainer-features/go-task:1": {},
-      "ghcr.io/dhoeric/features/stern:1": {},
-      "ghcr.io/goldsam/dev-container-features/flux2:1": {},
-      "ghcr.io/audacioustux/devcontainers/kustomize:1": {}
-    },
-    "customizations": {
-      "vscode": {
-        "settings": {
-          // "dev.containers.copyGitConfig": true,
-          "editor.tabSize": 4,
-          "terminal.integrated.defaultProfile.linux": "zsh",
-          "terminal.integrated.profiles.linux": {
-            "bash": {
-              "path": "bash",
-              "icon": "terminal-bash"
-            },
-            "zsh": {
-              "path": "zsh"
-            }
-          }
-        },
-        "extensions": [
-            "redhat.ansible",
-            "redhat.vscode-yaml",
-            "mhutchie.git-graph",
-            "github.vscode-github-actions",
-            "johnpapa.vscode-peacock",
-            "timonwong.shellcheck",
-            "robertz.code-snapshot",
-            "PKief.material-icon-theme",
-            "mkhl.direnv",
-            "adamhartford.vscode-base64",
-            "ms-python.python",
-            "ms-python.debugpy",
-            "ms-python.isort"
-        ]
+  "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+  "name": "DevContainer base image",
+  "build": {
+    "dockerfile": "./Dockerfile",
+    "context": "."
+  },
+  "runArgs": ["--userns=keep-id"],
+  "remoteUser": "vscode",
+  "containerUser": "vscode",
+  "updateRemoteUserUID": true,
+  "features": {
+    "ghcr.io/marcozac/devcontainer-features/shellcheck:1": {},
+    "ghcr.io/goldsam/dev-container-features/flux2:1": {},
+    "ghcr.io/audacioustux/devcontainers/kustomize:1": {},
+    "ghcr.io/devcontainers-extra/features/direnv:1": {},
+    "ghcr.io/devcontainers-extra/features/ansible:2": {},
+    "ghcr.io/eitsupi/devcontainer-features/go-task:1": {},
+    "ghcr.io/devcontainers-extra/features/helmfile:1": {},
+    "ghcr.io/devcontainers-extra/features/kubectl-asdf:2": {},
+    "ghcr.io/devcontainers-extra/features/sops:1": {},
+    "ghcr.io/devcontainers-extra/features/hadoop-sdkman:2": {},
+    "ghcr.io/devcontainers-extra/features/poetry:2": {}
+  },
+  "postStartCommand": "pre-commit install",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.tabSize": 4,
+        "terminal.integrated.defaultProfile.linux": "zsh"
       }
     }
   }
+  ,"mounts": [
+    "source=bashhistory,target=/home/vscode/.history,type=volume"
+  ]
+}
