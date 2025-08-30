@@ -1,0 +1,49 @@
+name: trivy-scan
+on:
+  pull_request:
+  schedule:
+    - cron: "30 4 * * 0"   # Sundays 04:30 UTC
+permissions:
+  contents: read
+  security-events: write
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Build the devcontainer image (no cache speeds are fine for weekly)
+      - name: Build image
+        run: |
+          docker build -t devcontainer:scan -f Dockerfile .
+
+      # Image scan
+      - name: Trivy Image Scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: devcontainer:scan
+          format: 'sarif'
+          output: 'trivy-image.sarif'
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+
+      # File system (deps) scan — looks at pyproject/lock etc.
+      - name: Trivy FS Scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          format: 'sarif'
+          output: 'trivy-fs.sarif'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+
+      # Upload both SARIF reports to GitHub code scanning
+      - name: Upload image results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image.sarif
+      - name: Upload fs results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-fs.sarif
