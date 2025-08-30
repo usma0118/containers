@@ -1,55 +1,64 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/docker-in-docker
 {
-	"name": "DevContainer for repo",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
+  "name": "DevContainer for repo",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/base:bullseye",
 
-	"features": {
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {
-			"version": "latest",
-			"enableNonRootDocker": "true",
-			"moby": "true"
-		},
-		"ghcr.io/dhoeric/features/hadolint:1": {},
-
-		"ghcr.io/gvatsal60/dev-container-features/pre-commit:1": {},
-		"ghcr.io/devcontainers-extra/features/devcontainers-cli:1": {}
-	}
-,"postStartCommand": "pre-commit install"
-,"remoteUser": "vscode", "containerUser": "vscode", "updateRemoteUserUID": true
-,"customizations": {
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true",
+      "moby": "true"
+    },
+    "ghcr.io/dhoeric/features/hadolint:1": {},
+    "ghcr.io/devcontainers-extra/features/ansible:2": {},
+    "ghcr.io/gvatsal60/dev-container-features/pre-commit:1": {},
+    "ghcr.io/devcontainers-extra/features/devcontainers-cli:1": {}
+  },
+  "postStartCommand": "pre-commit install",
+  "remoteUser": "vscode",
+  "containerUser": "vscode",
+  "updateRemoteUserUID": true,
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=bashhistory,target=/home/vscode/.history,type=volume"
+  ],
+  "customizations": {
     "vscode": {
-        "extensions": [
-            "redhat.ansible",
-            "richie5um2.vscode-sort-json",
-            "zainchen.json",
-            "ms-vscode.vscode-node-azure-pack",
-            "ms-vscode.azure-account",
-            "esbenp.prettier-vscode"
-        ],
-        "settings": {
-            "diffEditor.renderSideBySide": true,
-            "editor.suggestSelection": "first",
-            "editor.tabSize": 4,
-            "editor.wordWrap": "bounded",
-            "editor.wordWrapColumn": 200,
-            "explorer.confirmDelete": false,
-            "explorer.confirmDragAndDrop": false,
-            "editor.defaultFormatter": "esbenp.prettier-vscode",
-            "editor.formatOnSave": true,
-            "files.exclude": {
-                "**/.classpath": true,
-                "**/.DS_Store": true,
-                "**/.factorypath": true,
-                "**/.git": true,
-                "**/.project": true,
-                "**/.settings": true,
-                "**/*.js": {
-                    "when": "$(basename).ts"
-                }
-            }
+      "extensions": [
+        "redhat.ansible",
+        "richie5um2.vscode-sort-json",
+        "zainchen.json",
+        "ms-vscode.vscode-node-azure-pack",
+        "ms-vscode.azure-account",
+        "esbenp.prettier-vscode",
+        "timonwong.shellcheck",
+        "robertz.code-snapshot"
+      ],
+      "settings": {
+        "diffEditor.renderSideBySide": true,
+        "editor.suggestSelection": "first",
+        "editor.tabSize": 4,
+        "editor.wordWrap": "bounded",
+        "editor.wordWrapColumn": 200,
+        "explorer.confirmDelete": false,
+        "explorer.confirmDragAndDrop": false,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "files.exclude": {
+          "**/.classpath": true,
+          "**/.DS_Store": true,
+          "**/.factorypath": true,
+          "**/.git": true,
+          "**/.project": true,
+          "**/.settings": true,
+          "**/*.js": {
+            "when": "$(basename).ts"
+          }
         }
+      }
     }
-}
+  }
 }
