@@ -13,12 +13,12 @@ ARG USERNAME=vscode
 ENV USER=${USERNAME}
 ENV HOME=/home/${USERNAME}
 # Ensure pipx shims are on PATH for the user
-ENV PIPX_BIN_DIR=/home/${USERNAME}/.local/bin
+ENV PIPX_BIN_DIR=${HOME}/.local/bin
 ENV PATH=${PIPX_BIN_DIR}:${PATH}
 ENV PYTHONUNBUFFERED=1
 
 # Optional per-project venv (keep CLIs out of it)
-ENV VIRTUAL_ENV=/home/${USERNAME}/.venv
+ENV VIRTUAL_ENV=${HOME}/.venv
 ENV PATH=${VIRTUAL_ENV}/bin:${PIPX_BIN_DIR}:${PATH}
 RUN apk add --no-cache bash
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -56,19 +56,23 @@ RUN set -euxo pipefail; \
 # Install hadolint (static musl build)=
 ARG HADOLINT_VERSION=2.12.0
 RUN set -eux; \
-    mkdir -p "/home/${USERNAME}/.local/bin"; \
+    mkdir -p "${HOME}/.local/bin"; \
     case "$(uname -m)" in \
       x86_64)  target="x86_64" ;; \
       aarch64) target="arm64"  ;; \
       *) echo "Unsupported arch: $(uname -m)" >&2; exit 1 ;; \
     esac; \
-    curl -fsSL -o "/home/${USERNAME}/.local/bin/hadolint" \
+    curl -fsSL -o "${HOME}/.local/bin/hadolint" \
       "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-${target}"; \
-    chmod +x "/home/${USERNAME}/.local/bin/hadolint"
+    chmod +x "${HOME}/.local/bin/hadolint"
 
 
 # Switch to non-root; user-scoped setup from here
 USER ${USERNAME}
+# Ensure the directory is created and owned by vscode
+RUN mkdir -p ${HOME}/.local/state/pipx/log
+#\
+# && chown -R $USERNAME:$USERNAME ${HOME}/.local
 
 # Global CLI tools via pipx (installed into ~/.local/pipx envs; shims in ~/.local/bin)
 RUN set -euxo pipefail; \
