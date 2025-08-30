@@ -14,12 +14,16 @@
     "ghcr.io/dhoeric/features/hadolint:1": {},
     "ghcr.io/devcontainers-extra/features/ansible:2": {},
     "ghcr.io/devcontainers-extra/features/pre-commit:2": {},
-    "ghcr.io/devcontainers-extra/features/devcontainers-cli:1": {}
+    "ghcr.io/devcontainers-extra/features/devcontainers-cli:1": {},
+    "ghcr.io/devcontainers-extra/features/direnv:1": {}
   },
   "postStartCommand": "pre-commit install",
   "remoteUser": "vscode",
   "containerUser": "vscode",
   "updateRemoteUserUID": true,
+  "remoteEnv": {
+    "PODMAN_USERNS": "keep-id"
+  },
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
     "source=bashhistory,target=/home/vscode/.history,type=volume"
@@ -30,11 +34,10 @@
         "redhat.ansible",
         "richie5um2.vscode-sort-json",
         "zainchen.json",
-        "ms-vscode.vscode-node-azure-pack",
-        "ms-vscode.azure-account",
         "esbenp.prettier-vscode",
         "timonwong.shellcheck",
-        "robertz.code-snapshot"
+        "robertz.code-snapshot",
+        "mitchdenny.ecdc"
       ],
       "settings": {
         "diffEditor.renderSideBySide": true,
