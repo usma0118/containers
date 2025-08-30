@@ -66,12 +66,13 @@ RUN set -eux; \
       "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-${target}"; \
     chmod +x "/home/${USERNAME}/.local/bin/hadolint"
 
-# Global CLI tools via pipx (installed into ~/.local/pipx envs; shims in ~/.local/bin)
-RUN set -euxo pipefail; \
-  pipx install ansible-lint
 
 # Switch to non-root; user-scoped setup from here
 USER ${USERNAME}
+
+# Global CLI tools via pipx (installed into ~/.local/pipx envs; shims in ~/.local/bin)
+RUN set -euxo pipefail; \
+  pipx install ansible-lint
 
 # Optional per-project venv (keep CLIs out of it)
 RUN set -euxo pipefail; \
