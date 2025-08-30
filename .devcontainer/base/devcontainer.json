@@ -10,7 +10,7 @@
   "containerUser": "vscode",
   "updateRemoteUserUID": true,
   "features": {
-    "ghcr.io/marcozac/devcontainer-features/shellcheck:1": {},
+    "ghcr.io/devcontainers/features/shellcheck:1": {},
     "ghcr.io/goldsam/dev-container-features/flux2:1": {},
     "ghcr.io/audacioustux/devcontainers/kustomize:1": {},
     "ghcr.io/devcontainers-extra/features/direnv:1": {},

@@ -32,7 +32,6 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v5
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -46,8 +45,7 @@ jobs:
             image=moby/buildkit:latest
             network=host
 
-      - if: ${{ github.event_name != 'pull_request' }}
-        name: Login to GHCR
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -76,6 +74,8 @@ jobs:
         uses: devcontainers/ci@v0.3
         env:
           BUILDX_NO_DEFAULT_ATTESTATIONS: true
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           configFile: ".devcontainer/base/devcontainer.json"
           imageName: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
