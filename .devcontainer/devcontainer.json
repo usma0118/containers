@@ -13,7 +13,7 @@
     },
     "ghcr.io/dhoeric/features/hadolint:1": {},
     "ghcr.io/devcontainers-extra/features/ansible:2": {},
-    "ghcr.io/gvatsal60/dev-container-features/pre-commit:1": {},
+    "ghcr.io/devcontainers-extra/features/pre-commit:2": {},
     "ghcr.io/devcontainers-extra/features/devcontainers-cli:1": {}
   },
   "postStartCommand": "pre-commit install",
