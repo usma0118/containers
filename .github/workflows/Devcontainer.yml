@@ -1,52 +1,58 @@
----
-  # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-  name: "Devcontainer"
-  on:
-    workflow_dispatch:
-      inputs:
-        logLevel:
-          description: 'Log level'
-          required: true
-          default: 'warning'
-          type: choice
-          options:
-          - info
-          - warning
-          - debug
-    push:
-      branches:
-        - "main"
-      tags:
-        - 'v**'
-      paths: [".devcontainer/base/**"]
-    pull_request:
-      branches: ["main"]
-      paths: [".devcontainer/base/**"]
-  concurrency:
-    group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
-    cancel-in-progress: true
-  env:
-    REGISTRY: ghcr.io
-    IMAGE_NAME: ${{ github.repository }}/devcontainers/base
-  jobs:
-    Devcontainer-build-jobs:
-      runs-on: ubuntu-latest
-      permissions:
-        contents: read
-        packages: write
-        id-token: write
-      strategy:
-        fail-fast: true
-      steps:
-      - uses: actions/checkout@v5
+# .github/workflows/devcontainer.yml
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Devcontainer
+
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: Log level
+        required: true
+        default: warning
+        type: choice
+        options: [info, warning, debug]
+  push:
+    branches: [main]
+    tags: ['v**']
+    paths: [".devcontainer/base/**"]
+  pull_request:
+    branches: [main]
+    paths: [".devcontainer/base/**"]
+  schedule:
+    - cron: "0 3 * * 1" # Mondays 03:00 UTC
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/devcontainers/base
+  PLATFORMS: linux/amd64,linux/arm64
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
-          platforms: arm64,amd64,arm
+          platforms: amd64,arm64
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
           install: true
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
+
       - if: ${{ github.event_name != 'pull_request' }}
         name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -54,28 +60,33 @@
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract metadata (tags, labels) for Docker
+
+      - name: Extract metadata (tags, labels)
         id: meta
-        uses: docker/metadata-action@032a4b3bda1b716928481836ac5bfe36e1feaad6
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
           flavor: |
-            latest=auto
-            prefix=alpine-
-            suffix=
-      - name: Build and push via devcontainer action
+            prefix=alpine-,onlatest=true
+
+      - name: Build and push via Dev Containers CI
         uses: devcontainers/ci@v0.3
         env:
+          # disable provenance/attestations that can cause buildx errors on some runners
           BUILDX_NO_DEFAULT_ATTESTATIONS: true
         with:
-          imageName: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-          cacheFrom: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
-          # imageTag: ${{ steps.meta.outputs.tags }}
-          # imageLabel: ${{ steps.meta.outputs.labels }}
-          platform: linux/amd64,linux/arm64
+          # Use devcontainer.json from the base folder
           configFile: ".devcontainer/base/devcontainer.json"
+          imageName: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          imageTag: ${{ steps.meta.outputs.tags }}
+          imageLabel: ${{ steps.meta.outputs.labels }}
+          platform: ${{ env.PLATFORMS }}
           push: ${{ github.event_name == 'pull_request' && 'never' || 'always' }}
+          # Use registry cache (separate tag)
+          cacheFrom: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache
+          cacheTo: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cache
