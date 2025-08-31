@@ -25,7 +25,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Core packages (only from stable repos; no edge to avoid breakage)
 RUN set -euxo pipefail; \
   apk add --no-cache \
-    zsh ca-certificates curl wget gettext sshpass \
+    zsh ca-certificates curl wget gettext sshpass shellcheck \
     fzf jq git yq openssh-client \
     python3 py3-pip \
     task \
