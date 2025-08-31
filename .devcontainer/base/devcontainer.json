@@ -14,24 +14,51 @@
   "containerUser": "vscode",
   "updateRemoteUserUID": true,
   "features": {
-    "ghcr.io/goldsam/dev-container-features/flux2:1": {},
-    "ghcr.io/audacioustux/devcontainers/kustomize:1": {},
+    // "ghcr.io/goldsam/dev-container-features/flux2:1": {},
+    // "ghcr.io/audacioustux/devcontainers/kustomize:1": {},
     "ghcr.io/devcontainers-extra/features/direnv:1": {},
-    "ghcr.io/devcontainers-extra/features/ansible:2": {},
-    "ghcr.io/devcontainers-extra/features/helmfile:1": {},
-    "ghcr.io/devcontainers-extra/features/kubectl-asdf:2": {},
+    // "ghcr.io/devcontainers-extra/features/helmfile:1": {},
+    // "ghcr.io/devcontainers-extra/features/kubectl-asdf:2": {},
     "ghcr.io/devcontainers-extra/features/sops:1": {},
     "ghcr.io/devcontainers-extra/features/poetry:2": {}
   },
   "postStartCommand": "pre-commit install",
   "customizations": {
     "vscode": {
+      "extensions": [
+        "redhat.ansible",
+        "richie5um2.vscode-sort-json",
+        "zainchen.json",
+        "esbenp.prettier-vscode",
+        "timonwong.shellcheck",
+        "robertz.code-snapshot",
+        "mitchdenny.ecdc"
+      ],
       "settings": {
+        "diffEditor.renderSideBySide": true,
+        "editor.suggestSelection": "first",
         "editor.tabSize": 4,
-        "terminal.integrated.defaultProfile.linux": "zsh"
+        "editor.wordWrap": "bounded",
+        "editor.wordWrapColumn": 200,
+        "explorer.confirmDelete": false,
+        "explorer.confirmDragAndDrop": false,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "files.exclude": {
+          "**/.classpath": true,
+          "**/.DS_Store": true,
+          "**/.factorypath": true,
+          "**/.git": true,
+          "**/.project": true,
+          "**/.settings": true,
+          "**/*.js": {
+            "when": "$(basename).ts"
+          }
+        }
       }
     }
-  }
+
   ,"mounts": [
     "source=bashhistory,target=/home/vscode/.history,type=volume"
   ]

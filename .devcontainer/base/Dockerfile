@@ -29,7 +29,8 @@ RUN set -euxo pipefail; \
     fzf jq git yq openssh-client \
     python3 py3-pip \
     task \
-    age
+    age \
+    ansible
 
 # Install pipx in an isolated venv (PEP 668-safe) and expose it on PATH
 RUN set -euxo pipefail; \
