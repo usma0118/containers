@@ -6,13 +6,13 @@
 
 version: 2
 updates:
- - package-ecosystem: "devcontainers"
-   directory: "/"
-   schedule:
-     interval: weekly
-# Python (Poetry/pyproject.toml & poetry.lock supported via 'pip' ecosystem)
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: weekly
+  # Python (Poetry/pyproject.toml & poetry.lock supported via 'pip' ecosystem)
   - package-ecosystem: "pip"
-    directory: "/"               # adjust if your pyproject lives elsewhere
+    directory: "/" # adjust if your pyproject lives elsewhere
     schedule:
       interval: "weekly"
       day: "sunday"
