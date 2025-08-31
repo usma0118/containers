@@ -1,5 +1,6 @@
 {
   "recommendations": [
+    // existing
     "adamhartford.vscode-base64",
     "esbenp.prettier-vscode",
     "github.vscode-github-actions",
@@ -17,18 +18,29 @@
     "richie5um2.vscode-sort-json",
     "robertz.code-snapshot",
     "timonwong.shellcheck",
-    "zainchen.json"
+    "zainchen.json",
+
+    // Python IDE stack
+    "ms-python.vscode-pylance",
+    "charliermarsh.ruff",
+    "ms-python.black-formatter",
+    "usernamehw.errorlens",
+    "njpwerner.autodocstring",
+    "KevinRose.vsc-python-indent",
+    "visualstudioexptteam.vscodeintellicode",
+    "ms-toolsai.jupyter",
+
+    // Containers
+    "redhat.vscode-podman",
+    "ms-vscode-remote.remote-containers"
   ],
   "unwantedRecommendations": [
-    "ms-python.vscode-pylance",
-    "ms-toolsai.jupyter",
     "ms-vscode.cpptools",
     "ms-vscode.cmake-tools",
     "ms-vscode.powershell",
     "ms-vscode.node-debug2",
     "redhat.java",
     "vscjava.vscode-java-pack",
-    "ms-azuretools.vscode-docker",
-    "ms-vscode-remote.remote-containers"
+    "ms-azuretools.vscode-docker"
   ]
 }

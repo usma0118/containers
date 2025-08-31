@@ -27,9 +27,10 @@ RUN set -euxo pipefail; \
   apk add --no-cache \
     zsh ca-certificates curl wget gettext sshpass shellcheck \
     fzf jq git yq openssh-client \
-    python3 py3-pip \
+    python3 py3-pip poetry \
+    direnv \
     task \
-    age \
+    age sops \
     ansible
 
 # Install pipx in an isolated venv (PEP 668-safe) and expose it on PATH
