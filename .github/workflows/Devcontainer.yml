@@ -51,8 +51,8 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Check GitHub API rate limit
-        run: curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/rate_limit
+      # - name: Check GitHub API rate limit
+      #   run: curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/rate_limit
       # Compute *bare* tags for devcontainers/ci
       - name: Compute tags
         id: tags
