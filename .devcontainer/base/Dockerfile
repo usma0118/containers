@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/devcontainers/base:alpine-3.22
 
 LABEL maintainer="usma0118"
 LABEL org.opencontainers.image.title="devcontainer"
-LABEL org.opencontainers.image.description="Docker container"
+LABEL org.opencontainers.image.description="Development dev container"
 LABEL org.opencontainers.image.url="https://github.com/usma0118/containers/.devcontainer/base"
 LABEL org.opencontainers.image.source="https://github.com/usma0118/containers/.devcontainer/base"
 
@@ -17,7 +17,7 @@ ENV PYTHONUNBUFFERED=1
 # Optional per-project venv (keep CLIs out of it)
 ENV VIRTUAL_ENV=${HOME}/.venv
 ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
-RUN apk add --no-cache bash
+RUN apk update --no-cache && apk add --no-cache bash
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Core packages (only from stable repos; no edge to avoid breakage)
 RUN set -euxo pipefail; \
@@ -27,6 +27,7 @@ RUN set -euxo pipefail; \
     python3 py3-pip poetry \
     direnv \
     task \
+    tree \
     age sops \
     ansible
 
@@ -56,7 +57,7 @@ RUN set -euxo pipefail; \
 # Base Python tooling in the project venv
 RUN set -euxo pipefail; \
   if [ -x "${VIRTUAL_ENV}/bin/python" ]; then \
-    ${VIRTUAL_ENV}/bin/python -m pip install --no-cache-dir --upgrade pip setuptools wheel ansible-lint; \
+    ${VIRTUAL_ENV}/bin/python -m pip install --no-cache-dir --upgrade pip poetry setuptools wheel ansible-lint; \
   fi
 
 # direnv config (user scope)
