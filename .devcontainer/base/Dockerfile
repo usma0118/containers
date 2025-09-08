@@ -15,8 +15,6 @@ ENV HOME=/home/${USERNAME}
 ENV PYTHONUNBUFFERED=1
 
 # Optional per-project venv (keep CLIs out of it)
-ENV VIRTUAL_ENV=${HOME}/.venv
-ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
 RUN apk update --no-cache && apk add --no-cache bash
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Core packages (only from stable repos; no edge to avoid breakage)
@@ -53,6 +51,9 @@ USER ${USERNAME}
 # Optional per-project venv (keep CLIs out of it)
 RUN set -euxo pipefail; \
   python3 -m venv "${HOME}/.venv" || true
+
+  ENV VIRTUAL_ENV=${HOME}/.venv
+ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
 
 # Base Python tooling in the project venv
 RUN set -euxo pipefail; \
