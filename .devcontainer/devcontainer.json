@@ -17,7 +17,6 @@
     "ghcr.io/devcontainers-extra/features/devcontainers-cli:1": {},
     "ghcr.io/devcontainers-extra/features/direnv:1": {}
   },
-  "postStartCommand": "pre-commit install",
   "remoteUser": "vscode",
   "containerUser": "vscode",
   "updateRemoteUserUID": true,

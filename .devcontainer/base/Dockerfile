@@ -58,9 +58,10 @@ ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
 # Base Python tooling in the project venv
 RUN set -euxo pipefail; \
   if [ -x "${VIRTUAL_ENV}/bin/python" ]; then \
-    ${VIRTUAL_ENV}/bin/python -m pip install --no-cache-dir --upgrade pip poetry setuptools wheel ansible-lint; \
+    ${VIRTUAL_ENV}/bin/python -m pip install --no-cache-dir --upgrade pip poetry \
+    pre-commit setuptools wheel ansible-lint; \
   fi
-
+RUN pre-commit install --install-hooks || true
 # direnv config (user scope)
 RUN set -euxo pipefail; \
   mkdir -p "${HOME}/.config/direnv"; \
