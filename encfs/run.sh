@@ -17,15 +17,18 @@ debug() {
     if [ -n "$DEBUG" ]; then
       printf "${BLUE}[DEBUG] ${YELLOW}%s${RESET}\n" "$1"
     fi
+    return 0
 }
 
 info() {
   printf "${GREEN}%s${RESET}\n" "$1"
+  return 0
 }
 
 error() {
   printf "${RED}[ERROR] %s${RESET}\n" "$1"
-}
+  return 1
+    }
 
 mask_string() {
   str="$1"

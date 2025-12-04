@@ -26,22 +26,6 @@ info() {
   echo -e "${GREEN} ${1}${RESET}"
 }
 
-mask_string() {
-  local str="$1"
-  local mask_char="$2"
-  local masked_str=""
-
-  for (( i=0; i<${#str}; i++ )); do
-    if (( i % 2 == 0 )); then
-      masked_str+="${str:$i:1}"
-    else
-      masked_str+="$mask_char"
-    fi
-  done
-
-  echo "$masked_str"
-}
-
 function sigterm_handler {
   info "sending SIGTERM to child pid"
   kill -SIGTERM ${pid}
@@ -67,7 +51,7 @@ _uid="$(id -u)"
 debug "Running as $_user with UID: $_uid"
 unset pid
 if [ ! -z "$PASSWD" ]; then
-  info "mounting ${ENC_PATH} on ${DEC_PATH} with password: "$(mask_string "$PASSWD", "*")""
+  info "mounting ${ENC_PATH} on ${DEC_PATH}"
   echo "${PASSWD}" | cryfs -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
 else
 	cryfs ${ENCFS_OPTS} -o ${MOUNT_OPTIONS} -f "${ENC_PATH}" "${DEC_PATH}" & pid=($!)
