@@ -11,8 +11,8 @@ ENV CRYFS_FRONTEND="noninteractive" \
     DEBIAN_FRONTEND=noninteractive \
     CRYFS_LOCAL_STATE_DIR=/data
 VOLUME [ "/encrypted", "/decrypted", "/data" ]
-RUN apt-get update --no-install-recommends && apt-get upgrade --no-install-recommends -y
-&& apt-get --no-install-recommends install cryfs fuse tini -y &&\
+RUN apt-get update --no-install-recommends && apt-get upgrade --no-install-recommends -y &&\
+    apt-get --no-install-recommends install cryfs fuse tini -y &&\
     useradd -s /usr/sbin/nologin -m secretfs && passwd -d secretfs &&\
     echo 'nonroot ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers &&\
     echo user_allow_other >> /etc/fuse.conf &&\
