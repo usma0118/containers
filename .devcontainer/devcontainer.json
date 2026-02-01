@@ -36,7 +36,8 @@
         "esbenp.prettier-vscode",
         "timonwong.shellcheck",
         "robertz.code-snapshot",
-        "mitchdenny.ecdc"
+        "mitchdenny.ecdc",
+        "GitHub.copilot"
       ],
       "settings": {
         "diffEditor.renderSideBySide": true,
