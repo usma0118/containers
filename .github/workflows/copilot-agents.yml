@@ -25,7 +25,7 @@ jobs:
 
       - name: Prepare issue (create if task from chat)
         id: prepare_issue
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           script: |
             const eventName = context.eventName;
@@ -86,7 +86,7 @@ jobs:
 
       - name: Create PR and comment on issue
         if: steps.prepare_issue.outputs.result != ''
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           script: |
             const issueNumber = process.env.ISSUE_NUMBER;
