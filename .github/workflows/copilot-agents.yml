@@ -1,0 +1,115 @@
+name: Copilot Agents Coordinator
+
+on:
+  issues:
+    types: [opened, labeled]
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to act on'
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  implementation_planner:
+    name: Implementation Planner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare issue (create if task from chat)
+        id: prepare_issue
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const eventName = context.eventName;
+            let issueNumber = null;
+            // If triggered by issues event
+            if (eventName === 'issues' && context.payload.issue) {
+              issueNumber = String(context.payload.issue.number);
+              return issueNumber;
+            }
+
+            // If triggered by workflow_dispatch with inputs.issue_number
+            if (eventName === 'workflow_dispatch' && context.payload.inputs && context.payload.inputs.issue_number) {
+              issueNumber = String(context.payload.inputs.issue_number);
+              return issueNumber;
+            }
+
+            // If triggered by repository_dispatch, inspect payload
+            if (eventName === 'repository_dispatch') {
+              const payload = context.payload.client_payload || {};
+              if (payload.issue_number) {
+                issueNumber = String(payload.issue_number);
+                return issueNumber;
+              }
+
+              // If a task body is provided from chat, create an issue
+              if (payload.task) {
+                const title = payload.title || `Task from chat (${new Date().toISOString().slice(0,10)})`;
+                let body = `Task originated from external chat or automation.\n\n` + payload.task + '\n\n';
+                if (payload.chat_url) body += `Chat reference: ${payload.chat_url}\n\n`;
+                body += 'Assigned reviewer: @usma\n\n';
+                const created = await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: title,
+                  body: body,
+                  labels: ['copilot-task']
+                });
+                issueNumber = String(created.data.number);
+                return issueNumber;
+              }
+            }
+
+            core.info('No issue number or task payload found; exiting.');
+            return '';
+
+      - name: Create branch and initial commit for issue
+        if: steps.prepare_issue.outputs.result != ''
+        env:
+          ISSUE_NUMBER: ${{ steps.prepare_issue.outputs.result }}
+        run: |
+          echo "Preparing branch for issue $ISSUE_NUMBER"
+          git config user.name "Copilot Agents"
+          git config user.email "copilot@example.com"
+          BRANCH="agent/issue-${ISSUE_NUMBER}/implementation-plan"
+          git checkout -b "$BRANCH"
+          git commit --allow-empty -m "chore: create agent branch for issue #${ISSUE_NUMBER}"
+          git push origin "$BRANCH"
+
+      - name: Create PR and comment on issue
+        if: steps.prepare_issue.outputs.result != ''
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issueNumber = process.env.ISSUE_NUMBER;
+            if (!issueNumber) {
+              core.info('No issue number available, exiting.');
+              return;
+            }
+            const repo = await github.rest.repos.get({ owner: context.repo.owner, repo: context.repo.repo });
+            const base = repo.data.default_branch;
+            const branch = `agent/issue-${issueNumber}/implementation-plan`;
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: branch,
+              base: base,
+              title: `WIP: Implementation plan for #${issueNumber}`,
+              body: `This PR was opened by the Implementation Planner agent to coordinate work for issue #${issueNumber}. Reviewer: @usma. Do not merge without human review.`
+            });
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(issueNumber),
+              body: `Implementation Planner opened PR #${pr.data.number} for this issue. @usma is assigned as reviewer.`
+            });
+        env:
+          ISSUE_NUMBER: ${{ steps.prepare_issue.outputs.result }}
