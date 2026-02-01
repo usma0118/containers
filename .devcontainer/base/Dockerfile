@@ -13,6 +13,9 @@ ARG USERNAME=vscode
 ENV USER=${USERNAME}
 ENV HOME=/home/${USERNAME}
 ENV PYTHONUNBUFFERED=1
+ENV DEVCONTAINER=true
+ENV EDITOR=nano
+ENV VISUAL=nano
 
 # Optional per-project venv (keep CLIs out of it)
 RUN apk update --no-cache && apk add --no-cache bash
@@ -21,13 +24,14 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN set -euxo pipefail; \
   apk add --no-cache \
     zsh ca-certificates curl wget gettext sshpass shellcheck \
-    fzf jq git yq openssh-client \
+    fzf jq git yq openssh-client gh \
     python3 py3-pip poetry \
     direnv \
     task \
     tree \
     age sops \
-    ansible
+    ansible \
+    iptables iproute2 ipset bind-tools
 
 # Install lsd from upstream musl release (not in Alpine 3.20)
 ARG LSD_VERSION=1.1.5
@@ -45,6 +49,14 @@ RUN set -euxo pipefail; \
   install -m 0755 "$tmpdir"/lsd*/lsd /usr/local/bin/lsd; \
   rm -rf "$tmpdir"
 
+RUN npm install -g @anthropic-ai/claude-code@"${CLAUDE_CODE_VERSION}"
+
+# Copy and set up firewall script
+COPY init-firewall.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/init-firewall.sh && \
+  echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/node-firewall && \
+  chmod 0440 /etc/sudoers.d/node-firewall
+
 # Switch to non-root; user-scoped setup from here
 USER ${USERNAME}
 
@@ -52,7 +64,7 @@ USER ${USERNAME}
 RUN set -euxo pipefail; \
   python3 -m venv "${HOME}/.venv" || true
 
-  ENV VIRTUAL_ENV=${HOME}/.venv
+ENV VIRTUAL_ENV=${HOME}/.venv
 ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
 
 # Base Python tooling in the project venv
