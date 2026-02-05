@@ -26,7 +26,7 @@ RUN set -euxo pipefail; \
     zsh ca-certificates curl wget gettext sshpass shellcheck \
     fzf jq git yq openssh-client gh \
     python3 py3-pip poetry \
-    nodejs npm libnotify \
+    nodejs \
     direnv \
     task \
     tree \
@@ -51,7 +51,11 @@ RUN set -euxo pipefail; \
   rm -rf "$tmpdir"
 
 ARG CLAUDE_CODE_VERSION=latest
-RUN npm install -g @anthropic-ai/claude-code@"${CLAUDE_CODE_VERSION}"
+RUN if command -v npm >/dev/null 2>&1; then \
+      npm install -g @anthropic-ai/claude-code@"${CLAUDE_CODE_VERSION}"; \
+    else \
+      echo "npm not available; skipping global @anthropic-ai/claude-code install"; \
+    fi
 
 # Copy and set up firewall script
 COPY init-firewall.sh /usr/local/bin/
