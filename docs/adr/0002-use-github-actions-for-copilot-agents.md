@@ -22,5 +22,5 @@ use the `GITHUB_TOKEN` with the following permissions: `contents: write`, `pull-
 
 - Actions can create branches and PRs without external services, keeping automation in-repo.
 - Branch protection or strict push rules may require a PAT or GitHub App instead of `GITHUB_TOKEN`.
-- Reviewers should be defined via `.github/CODEOWNERS`; `@usma` is already assigned.
+- Reviewers should be defined via `.github/CODEOWNERS`; `@usma0118` is already assigned.
 - Permissions should be reviewed periodically and tightened where possible.
