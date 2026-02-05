@@ -24,7 +24,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN set -euxo pipefail; \
   apk add --no-cache \
     zsh ca-certificates curl wget gettext sshpass shellcheck \
-    fzf jq git yq openssh-client \
+    fzf jq git yq openssh-client github-cli \
     python3 py3-pip poetry \
     nodejs \
     direnv \
