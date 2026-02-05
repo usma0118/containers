@@ -24,7 +24,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN set -euxo pipefail; \
   apk add --no-cache \
     zsh ca-certificates curl wget gettext sshpass shellcheck \
-    fzf jq git yq openssh-client gh \
+    fzf jq git yq openssh-client \
     python3 py3-pip poetry \
     nodejs \
     direnv \
@@ -56,6 +56,27 @@ RUN if command -v npm >/dev/null 2>&1; then \
     else \
       echo "npm not available; skipping global @anthropic-ai/claude-code install"; \
     fi
+
+# Install GitHub CLI from releases when not available in apk
+ARG GH_VERSION=2.45.0
+RUN set -euxo pipefail; \
+  case "${TARGETARCH:-$(uname -m)}" in \
+    amd64|x86_64) gh_arch="amd64" ;; \
+    arm64|aarch64) gh_arch="arm64" ;; \
+    *) echo "Unsupported arch: ${TARGETARCH:-$(uname -m)}" >&2; exit 0 ;; \
+  esac; \
+  if ! command -v gh >/dev/null 2>&1; then \
+    tmpdir="$(mktemp -d)"; \
+    url="https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${gh_arch}.tar.gz"; \
+    echo "Installing gh from ${url}"; \
+    if curl -fsSL "$url" -o "$tmpdir/gh.tgz"; then \
+      tar -xzf "$tmpdir/gh.tgz" -C "$tmpdir"; \
+      install -m 0755 "$tmpdir"/gh_${GH_VERSION}_linux_${gh_arch}/bin/gh /usr/local/bin/gh || true; \
+      rm -rf "$tmpdir"; \
+    else \
+      echo "Failed to download gh release; gh will not be available"; \
+    fi; \
+  fi
 
 # Copy and set up firewall script
 COPY init-firewall.sh /usr/local/bin/
