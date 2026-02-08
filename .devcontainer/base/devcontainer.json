@@ -14,9 +14,6 @@
   "containerUser": "vscode",
   "updateRemoteUserUID": true,
   "postStartCommand": "pre-commit install",
-  "features": {
-    "ghcr.io/devcontainers-extra/features/claude-code:1": {}
-  },
   "customizations": {
     "vscode": {
       "settings": {
