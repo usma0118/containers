@@ -21,8 +21,6 @@
         "terminal.integrated.defaultProfile.linux": "zsh"
       }
     }
-  }
-  ,"mounts": [
-    "source=bashhistory,target=/home/vscode/.history,type=volume"
-  ]
+  },
+  "mounts": ["source=bashhistory,target=/home/vscode/.history,type=volume"]
 }

@@ -24,14 +24,17 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN set -euxo pipefail; \
   apk add --no-cache \
     zsh ca-certificates curl wget gettext sshpass shellcheck \
-    fzf jq git yq openssh-client gh \
+    fzf jq git yq openssh-client github-cli \
     python3 py3-pip poetry \
+    nodejs \
     direnv \
     task \
     tree \
     age sops \
     ansible \
-    iptables iproute2 ipset bind-tools
+    iptables iproute2 ipset bind-tools \
+    nodejs npm \
+    libnotify
 
 # Install lsd from upstream musl release (not in Alpine 3.20)
 ARG LSD_VERSION=1.1.5
@@ -49,6 +52,7 @@ RUN set -euxo pipefail; \
   install -m 0755 "$tmpdir"/lsd*/lsd /usr/local/bin/lsd; \
   rm -rf "$tmpdir"
 
+ARG CLAUDE_CODE_VERSION=latest
 RUN npm install -g @anthropic-ai/claude-code@"${CLAUDE_CODE_VERSION}"
 
 # Copy and set up firewall script
@@ -71,7 +75,7 @@ ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
 RUN set -euxo pipefail; \
   if [ -x "${VIRTUAL_ENV}/bin/python" ]; then \
     ${VIRTUAL_ENV}/bin/python -m pip install --no-cache-dir --upgrade pip poetry \
-    pre-commit setuptools wheel ansible-lint; \
+    pre-commit setuptools wheel ansible-lint pytest pytest-mock; \
   fi
 RUN pre-commit install --install-hooks || true
 # direnv config (user scope)
@@ -97,9 +101,9 @@ RUN set -euxo pipefail; \
 # hadolint ignore=SC2016
 RUN set -euxo pipefail; \
   { \
-    echo 'export HISTFILE="$HOME/.history/.zsh_history"'; \
-    echo 'setopt INC_APPEND_HISTORY SHARE_HISTORY'; \
-    echo 'eval "$(direnv hook zsh)"'; \
+    echo "export HISTFILE=\"\$HOME/.history/.zsh_history\""; \
+    echo "setopt INC_APPEND_HISTORY SHARE_HISTORY"; \
+    echo "eval \"\$(direnv hook zsh)\""; \
   } >> "${HOME}/.zshrc"
 
 # Oh-My-Zsh extras (assumes oh-my-zsh is installed by your dotfiles bootstrap)
@@ -108,5 +112,13 @@ RUN set -euxo pipefail; \
   git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions     "${HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"; \
   git clone --depth=1 https://github.com/romkatv/powerlevel10k.git          "${HOME}/.oh-my-zsh/custom/themes/powerlevel10k"; \
   curl -fsSL -o "${HOME}/.p10k.zsh" https://raw.githubusercontent.com/usma0118/dotfiles/HEAD/zshrc/themes/dev.p10k.zsh
+
+# Add GitHub CLI zsh completions (if gh is available in the image)
+RUN set -euxo pipefail; \
+  if command -v gh >/dev/null 2>&1; then \
+    mkdir -p "${HOME}/.oh-my-zsh/custom/plugins/gh"; \
+    gh completion -s zsh > "${HOME}/.oh-my-zsh/custom/plugins/gh/_gh" || true; \
+    echo "fpath+=(\"\$HOME/.oh-my-zsh/custom/plugins/gh\")" >> "${HOME}/.zshrc"; \
+  fi
 
 WORKDIR /workspaces
