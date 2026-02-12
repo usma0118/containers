@@ -1,0 +1,170 @@
+FROM debian:bookworm-slim
+
+LABEL maintainer="usma0118"
+LABEL org.opencontainers.image.title="devcontainer"
+LABEL org.opencontainers.image.description="Development dev container"
+LABEL org.opencontainers.image.url="https://github.com/usma0118/containers/.devcontainer/base"
+LABEL org.opencontainers.image.source="https://github.com/usma0118/containers/.devcontainer/base"
+
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+ENV USER=${USERNAME}
+ENV HOME=/home/${USERNAME}
+ENV PYTHONUNBUFFERED=1
+ENV DEVCONTAINER=true
+ENV EDITOR=nano
+ENV VISUAL=nano
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Core OS deps (keep lean: no recommends)
+RUN set -eux; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends \
+    ca-certificates curl wget gettext-base \
+    zsh bash \
+    openssh-client sshpass \
+    jq git \
+    python3 python3-venv python3-pip \
+    nodejs npm \
+    direnv \
+    iproute2 iptables ipset dnsutils \
+    tree \
+    sudo \
+    libnotify-bin \
+    build-essential \
+    libjpeg62-turbo-dev zlib1g-dev libpng-dev \
+  ; \
+  rm -rf /var/lib/apt/lists/*
+
+# yq (Debian repo yq is often old; install upstream binary)
+ARG TARGETARCH
+ARG YQ_VERSION=v4.44.3
+RUN set -eux; \
+  case "${TARGETARCH:-$(dpkg --print-architecture)}" in \
+    amd64|x86_64)  arch="amd64" ;; \
+    arm64|aarch64) arch="arm64" ;; \
+    *) echo "Unsupported arch: ${TARGETARCH:-$(dpkg --print-architecture)}" >&2; exit 1 ;; \
+  esac; \
+  curl -fsSL -o /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${arch}"; \
+  chmod +x /usr/local/bin/yq
+
+# task (go-task) from upstream binary (small + predictable)
+ARG TASK_VERSION=v3.41.0
+RUN set -eux; \
+  case "${TARGETARCH:-$(dpkg --print-architecture)}" in \
+    amd64|x86_64)  arch="amd64" ;; \
+    arm64|aarch64) arch="arm64" ;; \
+    *) echo "Unsupported arch: ${TARGETARCH:-$(dpkg --print-architecture)}" >&2; exit 1 ;; \
+  esac; \
+  tmpdir="$(mktemp -d)"; \
+  curl -fsSL "https://github.com/go-task/task/releases/download/${TASK_VERSION}/task_linux_${arch}.tar.gz" -o "$tmpdir/task.tgz"; \
+  tar -xzf "$tmpdir/task.tgz" -C "$tmpdir"; \
+  install -m 0755 "$tmpdir/task" /usr/local/bin/task; \
+  rm -rf "$tmpdir"
+
+# age + sops (age in Debian; sops via upstream)
+ARG SOPS_VERSION=v3.9.4
+RUN set -eux; \
+  apt-get update; apt-get install -y --no-install-recommends age; rm -rf /var/lib/apt/lists/*; \
+  case "${TARGETARCH:-$(dpkg --print-architecture)}" in \
+    amd64|x86_64)  arch="amd64" ;; \
+    arm64|aarch64) arch="arm64" ;; \
+    *) echo "Unsupported arch" >&2; exit 1 ;; \
+  esac; \
+  curl -fsSL -o /usr/local/bin/sops "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.linux.${arch}"; \
+  chmod +x /usr/local/bin/sops
+
+# GitHub CLI (official apt repo; cleaner than random binaries)
+RUN set -eux; \
+  (type -p wget >/dev/null || (apt-get update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*)); \
+  mkdir -p /etc/apt/keyrings; \
+  wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg > /etc/apt/keyrings/githubcli-archive-keyring.gpg; \
+  chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg; \
+  echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends gh; \
+  rm -rf /var/lib/apt/lists/*
+
+# poetry + python tooling (use pip; distro-poetry can lag)
+RUN set -eux; \
+  python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel; \
+  python3 -m pip install --no-cache-dir poetry pre-commit ansible ansible-lint pytest pytest-mock shellcheck-py
+
+# Create non-root user
+RUN set -eux; \
+  groupadd --gid "${USER_GID}" "${USERNAME}"; \
+  useradd  --uid "${USER_UID}" --gid "${USER_GID}" -m "${USERNAME}" -s /usr/bin/zsh; \
+  echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/${USERNAME}; \
+  chmod 0440 /etc/sudoers.d/${USERNAME}
+
+# Firewall script (fix sudoers entry: use vscode, not node)
+COPY init-firewall.sh /usr/local/bin/
+RUN set -eux; \
+  chmod +x /usr/local/bin/init-firewall.sh; \
+  echo "${USERNAME} ALL=(root) NOPASSWD: /usr/local/bin/init-firewall.sh" > /etc/sudoers.d/${USERNAME}-firewall; \
+  chmod 0440 /etc/sudoers.d/${USERNAME}-firewall
+
+USER ${USERNAME}
+
+# Per-user venv
+RUN set -eux; \
+  python3 -m venv "${HOME}/.venv" || true
+
+ENV VIRTUAL_ENV=${HOME}/.venv
+ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
+
+# Torch + torchvision (CPU example; swap index-url if you want CUDA)
+# If you want plain PyPI instead, remove --index-url.
+RUN set -eux; \
+  python -m pip install --no-cache-dir --upgrade pip; \
+  python -m pip install --no-cache-dir \
+    --index-url https://download.pytorch.org/whl/cpu \
+    torch torchvision
+
+RUN pre-commit install --install-hooks || true
+
+# direnv config (user scope)
+RUN set -eux; \
+  mkdir -p "${HOME}/.config/direnv"; \
+  printf '%s\n' \
+    '[whitelist]' \
+    'prefix = [ "/workspaces" ]' \
+    > "${HOME}/.config/direnv/direnv.toml"
+
+# Expected dirs
+RUN set -eux; \
+  mkdir -p \
+    "${HOME}/.vscode-server/extensions" \
+    "${HOME}/.cache" \
+    "${HOME}/.local" \
+    "${HOME}/.history" \
+    "${HOME}/.oh-my-zsh/custom/themes" \
+    "${HOME}/.oh-my-zsh/custom/plugins"
+
+# zsh: history + direnv hook
+RUN set -eux; \
+  { \
+    echo "export HISTFILE=\"\$HOME/.history/.zsh_history\""; \
+    echo "setopt INC_APPEND_HISTORY SHARE_HISTORY"; \
+    echo "eval \"\$(direnv hook zsh)\""; \
+  } >> "${HOME}/.zshrc"
+
+# Oh-My-Zsh extras
+RUN set -eux; \
+  git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"; \
+  git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions     "${HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"; \
+  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git          "${HOME}/.oh-my-zsh/custom/themes/powerlevel10k"; \
+  curl -fsSL -o "${HOME}/.p10k.zsh" https://raw.githubusercontent.com/usma0118/dotfiles/HEAD/zshrc/themes/dev.p10k.zsh
+
+# GitHub CLI zsh completions
+RUN set -eux; \
+  if command -v gh >/dev/null 2>&1; then \
+    mkdir -p "${HOME}/.oh-my-zsh/custom/plugins/gh"; \
+    gh completion -s zsh > "${HOME}/.oh-my-zsh/custom/plugins/gh/_gh" || true; \
+    echo "fpath+=(\"\$HOME/.oh-my-zsh/custom/plugins/gh\")" >> "${HOME}/.zshrc"; \
+  fi
+
+WORKDIR /workspaces
