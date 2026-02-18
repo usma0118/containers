@@ -24,7 +24,12 @@
   "remoteEnv": {
     "PODMAN_USERNS": "keep-id"
   },
-  "mounts": ["source=bashhistory,target=/home/vscode/.history,type=volume"],
+  "mounts": [
+    "source=bashhistory,target=/home/vscode/.bash_history,type=volume",
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind",
+    "source=${localEnv:HOME}/.codex,target=/home/vscode/.codex,type=bind",
+    "source=${localEnv:HOME}/.config/gh,target=/home/vscode/.config/gh,type=bind,consistency=cached"
+  ],
   "customizations": {
     "vscode": {
       "extensions": [

@@ -24,8 +24,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN set -euxo pipefail; \
   apk add --no-cache \
     zsh ca-certificates curl wget gettext sshpass shellcheck \
-    fzf jq git yq openssh-client github-cli \
-    python3 py3-pip poetry \
+    fzf jq git yq openssh-client github-cli ripgrep \
+    python3 py3-pip \
     nodejs \
     direnv \
     task \
@@ -35,6 +35,9 @@ RUN set -euxo pipefail; \
     iptables iproute2 ipset bind-tools \
     nodejs npm \
     libnotify
+
+RUN set -euxo pipefail; \
+  curl -LsSf https://astral.sh/uv/install.sh | sh -s -- --install-dir /usr/local/bin
 
 # Install lsd from upstream musl release (not in Alpine 3.20)
 ARG LSD_VERSION=1.1.5
@@ -74,7 +77,7 @@ ENV PATH=${VIRTUAL_ENV}/bin:${PATH}
 # Base Python tooling in the project venv
 RUN set -euxo pipefail; \
   if [ -x "${VIRTUAL_ENV}/bin/python" ]; then \
-    ${VIRTUAL_ENV}/bin/python -m pip install --no-cache-dir --upgrade pip poetry \
+    ${VIRTUAL_ENV}/bin/python -m pip install --no-cache-dir --upgrade pip \
     pre-commit setuptools wheel ansible-lint pytest pytest-mock; \
   fi
 RUN pre-commit install --install-hooks || true
