@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 # Setup Environment
 ENV CRYFS_FRONTEND="noninteractive" \
     CRYFS_OPTIONS="--create-missing-basedir --create-missing-mountpoint" \
