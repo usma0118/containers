@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "NFS-Ganesha version to build"
+        description: "NFS-Ganesha version to build (optional)"
         required: false
         type: string
 
@@ -17,7 +17,6 @@ on:
       - ".github/workflows/nfs-ganesha.yml"
 
   schedule:
-    # Check upstream releases every day.
     - cron: "17 5 * * *"
 
 concurrency:
@@ -28,23 +27,22 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/nfs-ganesha
   UPSTREAM_REPO: nfs-ganesha/nfs-ganesha
+  WOLFI_IMAGE: cgr.dev/chainguard/wolfi-base:latest
 
 jobs:
   check-release:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: read
 
     outputs:
       version: ${{ steps.release.outputs.version }}
-      should-build: ${{ steps.release.outputs.should-build }}
+      major: ${{ steps.release.outputs.major }}
+      wolfi-version: ${{ steps.wolfi.outputs.version }}
+      should-build: ${{ steps.decision.outputs.should-build }}
 
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
       - name: Determine upstream release
         id: release
         env:
@@ -64,29 +62,61 @@ jobs:
           fi
 
           if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
-            echo "Unable to determine upstream release"
+            echo "Unable to determine upstream Ganesha release"
             exit 1
           fi
 
-          echo "Upstream Ganesha release: $VERSION"
-
-          if git rev-parse "refs/tags/ganesha-v${VERSION}" >/dev/null 2>&1; then
-            echo "ganesha-v${VERSION} already built"
-            echo "should-build=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "New Ganesha release detected"
-            echo "should-build=true" >> "$GITHUB_OUTPUT"
-          fi
+          echo "Upstream Ganesha version: ${VERSION}"
 
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "major=${VERSION%%.*}" >> "$GITHUB_OUTPUT"
 
-      - name: Create release marker
-        if: steps.release.outputs.should-build == 'true'
-        env:
-          VERSION: ${{ steps.release.outputs.version }}
+      - name: Query Wolfi Ganesha package
+        id: wolfi
         run: |
-          git tag "ganesha-v${VERSION}"
-          git push origin "ganesha-v${VERSION}"
+          set -euo pipefail
+
+          WOLFI_VERSION="$(
+            docker run --rm \
+              "${WOLFI_IMAGE}" \
+              sh -c '
+                apk update >/dev/null
+                apk policy nfs-ganesha |
+                  awk "/^nfs-ganesha-[0-9]/{print \$1; exit}" |
+                  sed "s/^nfs-ganesha-//"
+              '
+          )"
+
+          if [ -z "$WOLFI_VERSION" ]; then
+            echo "Unable to determine Wolfi nfs-ganesha version"
+            exit 1
+          fi
+
+          WOLFI_RELEASE="${WOLFI_VERSION%-r*}"
+
+          echo "Wolfi package: ${WOLFI_VERSION}"
+          echo "Wolfi Ganesha release: ${WOLFI_RELEASE}"
+
+          echo "version=${WOLFI_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "release=${WOLFI_RELEASE}" >> "$GITHUB_OUTPUT"
+
+      - name: Decide whether to build
+        id: decision
+        env:
+          UPSTREAM_VERSION: ${{ steps.release.outputs.version }}
+          WOLFI_RELEASE: ${{ steps.wolfi.outputs.release }}
+        run: |
+          set -euo pipefail
+
+          if [ "$WOLFI_RELEASE" = "$UPSTREAM_VERSION" ]; then
+            echo "Versions match: ${UPSTREAM_VERSION}"
+            echo "should-build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Upstream: ${UPSTREAM_VERSION}"
+            echo "Wolfi:    ${WOLFI_RELEASE}"
+            echo "Wolfi has not caught up yet."
+            echo "should-build=false" >> "$GITHUB_OUTPUT"
+          fi
 
   build:
     needs: check-release
@@ -128,7 +158,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=${{ needs.check-release.outputs.version }}
-            type=raw,value=${{ needs.check-release.outputs.version_major }}
+            type=raw,value=${{ needs.check-release.outputs.major }}
             type=raw,value=latest
 
       - name: Build and push
