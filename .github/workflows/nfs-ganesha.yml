@@ -92,6 +92,9 @@ jobs:
             exit 1
           fi
 
+          # Convert:
+          #   12.0-r1 -> 12.0
+          #   12.0-r2 -> 12.0
           WOLFI_RELEASE="${WOLFI_VERSION%-r*}"
 
           echo "Wolfi package: ${WOLFI_VERSION}"
@@ -100,23 +103,61 @@ jobs:
           echo "version=${WOLFI_VERSION}" >> "$GITHUB_OUTPUT"
           echo "release=${WOLFI_RELEASE}" >> "$GITHUB_OUTPUT"
 
+      - name: Check published image
+        id: image
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          if docker manifest inspect \
+              "${REGISTRY}/${IMAGE_NAME}:${VERSION}" >/dev/null 2>&1; then
+            echo "Image already exists:"
+            echo "${REGISTRY}/${IMAGE_NAME}:${VERSION}"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Image does not exist:"
+            echo "${REGISTRY}/${IMAGE_NAME}:${VERSION}"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Decide whether to build
         id: decision
         env:
           UPSTREAM_VERSION: ${{ steps.release.outputs.version }}
           WOLFI_RELEASE: ${{ steps.wolfi.outputs.release }}
+          IMAGE_EXISTS: ${{ steps.image.outputs.exists }}
         run: |
           set -euo pipefail
 
-          if [ "$WOLFI_RELEASE" = "$UPSTREAM_VERSION" ]; then
-            echo "Versions match: ${UPSTREAM_VERSION}"
-            echo "should-build=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Upstream: ${UPSTREAM_VERSION}"
-            echo "Wolfi:    ${WOLFI_RELEASE}"
-            echo "Wolfi has not caught up yet."
+          echo "Upstream Ganesha: ${UPSTREAM_VERSION}"
+          echo "Wolfi Ganesha:    ${WOLFI_RELEASE}"
+          echo "Image exists:     ${IMAGE_EXISTS}"
+
+          if [ "$WOLFI_RELEASE" != "$UPSTREAM_VERSION" ]; then
+            echo
+            echo "Wolfi has not caught up with the upstream release."
+            echo "Skipping build."
+
             echo "should-build=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+
+          if [ "$IMAGE_EXISTS" = "true" ]; then
+            echo
+            echo "Image is already published."
+            echo "Skipping build."
+
+            echo "should-build=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo
+          echo "Wolfi and upstream versions match."
+          echo "No published image exists."
+          echo "Building."
+
+          echo "should-build=true" >> "$GITHUB_OUTPUT"
 
   build:
     needs: check-release
