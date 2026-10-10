@@ -67,6 +67,7 @@ done < <(echo "$gh_ranges" | jq -r '(.web + .api + .git)[]' | grep -E '^[0-9]+\.
 for domain in \
     "registry.npmjs.org" \
     "api.anthropic.com" \
+    "api.openai.com" \
     "sentry.io" \
     "statsig.anthropic.com" \
     "statsig.com" \
@@ -135,4 +136,5 @@ if ! curl --connect-timeout 5 https://api.github.com/zen >/dev/null 2>&1; then
 else
     echo "Firewall verification passed - able to reach https://api.github.com as expected"
 fi
+
 echo "All firewall rules are functioning as intended."
