@@ -38,7 +38,8 @@ RUN set -euxo pipefail; \
     libnotify
 
 RUN set -euxo pipefail; \
-  curl -LsSf https://astral.sh/uv/install.sh | sh -s -- --install-dir /usr/local/bin
+  curl -LsSf https://astral.sh/uv/install.sh | env UV_UNMANAGED_INSTALL="/usr/local/bin" sh; \
+  uv --version
 
 # Install lsd from upstream musl release (not in Alpine 3.20)
 ARG LSD_VERSION=1.1.5
