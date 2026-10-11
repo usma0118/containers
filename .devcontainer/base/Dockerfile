@@ -32,6 +32,7 @@ RUN set -euxo pipefail; \
     tree \
     age sops \
     ansible \
+    bubblewrap socat \
     iptables iproute2 ipset bind-tools \
     nodejs npm \
     libnotify
