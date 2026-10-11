@@ -1,4 +1,4 @@
-# ADR 0002 — Use GitHub Actions for Copilot Agents coordination
+# ADR 0002 — Use GitHub Actions to coordinate Copilot planning
 
 Date: 2026-02-01
 
@@ -6,21 +6,26 @@ Status: Proposed
 
 ## Context
 
-The repository needs an automated coordinator to intake tasks from issues or external systems,
-create branches and PRs, and comment on issues to coordinate work. GitHub Actions is already
-available and suitable for this automation.
+The repository needs a controlled way to start planning from issues and external task sources.
+GitHub Actions can validate task intake and assign an issue to Copilot cloud agent, while the
+agent creates the plan pull request. The workflow's `GITHUB_TOKEN` cannot assign Copilot; the
+assignment API requires a user-to-server token.
 
 ## Decision
 
-We will use a GitHub Actions workflow (`.github/workflows/copilot-agents.yml`) as the
-Copilot Agents coordinator. The workflow will listen for `issues`, `repository_dispatch`, and
-`workflow_dispatch` events, create branches and PRs, and comment on issues. The workflow will
-use the `GITHUB_TOKEN` with the following permissions: `contents: write`, `pull-requests: write`,
-`issues: write`.
+We will use `.github/workflows/copilot-agents.yml` to accept only open issues labeled
+`copilot-task`, including validated manual and repository-dispatch requests. The workflow uses
+`GITHUB_TOKEN` with `issues: write` to validate or create issues and post status comments. It
+uses the `COPILOT_AGENT_TOKEN` user-to-server secret to assign the repository's Copilot cloud
+agent with planning-only instructions. Copilot creates a plan-only pull request;
+the workflow does not push branches or create empty pull requests.
 
 ## Consequences
 
-- Actions can create branches and PRs without external services, keeping automation in-repo.
-- Branch protection or strict push rules may require a PAT or GitHub App instead of `GITHUB_TOKEN`.
-- Reviewers should be defined via `.github/CODEOWNERS`; `@usma0118` is already assigned.
-- Permissions should be reviewed periodically and tightened where possible.
+- Copilot cloud agent availability, account entitlement, and a user-to-server token are required.
+- The token must have the permissions required by GitHub's Copilot issue-assignment API and
+  must be stored as the `COPILOT_AGENT_TOKEN` Actions secret.
+- `.github/CODEOWNERS` requests `@usma0118`; a repository ruleset or branch protection setting
+  must separately require approval and code-owner review to enforce the human merge gate.
+- The workflow processes planning only after explicit `copilot-task` opt-in, reducing unintended
+  runs and preventing duplicate empty-branch creation.

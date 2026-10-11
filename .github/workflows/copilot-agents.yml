@@ -2,114 +2,184 @@ name: Copilot Agents Coordinator
 
 on:
   issues:
-    types: [opened, labeled]
+    types: [labeled]
   repository_dispatch:
+    types: [copilot-task]
   workflow_dispatch:
     inputs:
       issue_number:
-        description: 'Issue number to act on'
-        required: false
+        description: "Issue number to act on"
+        required: true
+        type: number
 
 permissions:
-  contents: write
-  pull-requests: write
   issues: write
 
 jobs:
   implementation_planner:
     name: Implementation Planner
+    if: github.event_name != 'issues' || github.event.label.name == 'copilot-task'
     runs-on: ubuntu-latest
+    concurrency:
+      group: copilot-plan-${{ github.event.issue.number || github.event.inputs.issue_number || github.event.client_payload.issue_number || github.run_id }}
+      cancel-in-progress: false
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Prepare issue (create if task from chat)
+      - name: Prepare and validate issue
         id: prepare_issue
         uses: actions/github-script@v9
         with:
+          github-token: ${{ github.token }}
           script: |
             const eventName = context.eventName;
             let issueNumber = null;
-            // If triggered by issues event
+
             if (eventName === 'issues' && context.payload.issue) {
+              if (context.payload.label?.name !== 'copilot-task') {
+                core.notice('Ignoring issue label; only copilot-task starts planning.');
+                return '';
+              }
               issueNumber = String(context.payload.issue.number);
-              return issueNumber;
-            }
-
-            // If triggered by workflow_dispatch with inputs.issue_number
-            if (eventName === 'workflow_dispatch' && context.payload.inputs && context.payload.inputs.issue_number) {
+            } else if (eventName === 'workflow_dispatch' && context.payload.inputs?.issue_number) {
               issueNumber = String(context.payload.inputs.issue_number);
-              return issueNumber;
-            }
-
-            // If triggered by repository_dispatch, inspect payload
-            if (eventName === 'repository_dispatch') {
+            } else if (eventName === 'repository_dispatch') {
               const payload = context.payload.client_payload || {};
               if (payload.issue_number) {
                 issueNumber = String(payload.issue_number);
-                return issueNumber;
-              }
-
-              // If a task body is provided from chat, create an issue
-              if (payload.task) {
-                const title = payload.title || `Task from chat (${new Date().toISOString().slice(0,10)})`;
-                let body = `Task originated from external chat or automation.\n\n` + payload.task + '\n\n';
+              } else if (typeof payload.task === 'string' && payload.task.trim()) {
+                const title = payload.title || `Task from chat (${new Date().toISOString().slice(0, 10)})`;
+                let body = `Task originated from external chat or automation.\n\n${payload.task.trim()}\n\n`;
                 if (payload.chat_url) body += `Chat reference: ${payload.chat_url}\n\n`;
-                body += 'Assigned reviewer: @usma\n\n';
                 const created = await github.rest.issues.create({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
-                  title: title,
-                  body: body,
+                  title,
+                  body,
                   labels: ['copilot-task']
                 });
                 issueNumber = String(created.data.number);
-                return issueNumber;
               }
             }
 
-            core.info('No issue number or task payload found; exiting.');
-            return '';
+            if (!issueNumber || !/^\d+$/.test(issueNumber)) {
+              core.setFailed('Provide an issue number or a non-empty task payload.');
+              return '';
+            }
 
-      - name: Create branch and initial commit for issue
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number(issueNumber)
+            });
+            if (issue.pull_request) {
+              core.setFailed(`#${issueNumber} is a pull request, not an issue.`);
+              return '';
+            }
+            if (issue.state !== 'open') {
+              core.notice(`Ignoring closed issue #${issueNumber}.`);
+              return '';
+            }
+            if (!issue.labels.some(label => (typeof label === 'string' ? label : label.name) === 'copilot-task')) {
+              core.notice(`Issue #${issueNumber} must have the copilot-task label.`);
+              return '';
+            }
+            return issueNumber;
+
+      - name: Check Copilot assignment token
         if: steps.prepare_issue.outputs.result != ''
         env:
-          ISSUE_NUMBER: ${{ steps.prepare_issue.outputs.result }}
+          COPILOT_AGENT_TOKEN: ${{ secrets.COPILOT_AGENT_TOKEN }}
         run: |
-          echo "Preparing branch for issue $ISSUE_NUMBER"
-          git config user.name "Copilot Agents"
-          git config user.email "copilot@example.com"
-          BRANCH="agent/issue-${ISSUE_NUMBER}/implementation-plan"
-          git checkout -b "$BRANCH"
-          git commit --allow-empty -m "chore: create agent branch for issue #${ISSUE_NUMBER}"
-          git push origin "$BRANCH"
+          if [[ -z "$COPILOT_AGENT_TOKEN" ]]; then
+            echo "::error::Configure COPILOT_AGENT_TOKEN as a user-to-server token to assign Copilot cloud agent."
+            exit 1
+          fi
 
-      - name: Create PR and comment on issue
+      - name: Assign Copilot planning agent
+        id: assign_copilot
         if: steps.prepare_issue.outputs.result != ''
         uses: actions/github-script@v9
         with:
+          github-token: ${{ secrets.COPILOT_AGENT_TOKEN }}
           script: |
-            const issueNumber = process.env.ISSUE_NUMBER;
-            if (!issueNumber) {
-              core.info('No issue number available, exiting.');
+            const issueNumber = Number(process.env.ISSUE_NUMBER);
+            const headers = { 'GraphQL-Features': 'issues_copilot_assignment_api_support,coding_agent_model_selection' };
+            const result = await github.graphql(
+              `query($owner: String!, $repo: String!, $issueNumber: Int!) {
+                repository(owner: $owner, name: $repo) {
+                  id
+                  defaultBranchRef { name }
+                  issue(number: $issueNumber) {
+                    id
+                    assignees(first: 100) { nodes { login } }
+                  }
+                  suggestedActors(capabilities: [CAN_BE_ASSIGNED], first: 100) {
+                    nodes {
+                      ... on Bot { id login }
+                      ... on User { id login }
+                    }
+                  }
+                }
+              }`,
+              { owner: context.repo.owner, repo: context.repo.repo, issueNumber, headers }
+            );
+            const repository = result.repository;
+            const copilot = repository.suggestedActors.nodes.find(actor => actor.login === 'copilot-swe-agent');
+            if (!copilot) {
+              core.setFailed('Copilot cloud agent is unavailable. Enable it for this repository and verify COPILOT_AGENT_TOKEN permissions.');
               return;
             }
-            const repo = await github.rest.repos.get({ owner: context.repo.owner, repo: context.repo.repo });
-            const base = repo.data.default_branch;
-            const branch = `agent/issue-${issueNumber}/implementation-plan`;
-            const pr = await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              head: branch,
-              base: base,
-              title: `WIP: Implementation plan for #${issueNumber}`,
-              body: `This PR was opened by the Implementation Planner agent to coordinate work for issue #${issueNumber}. Reviewer: @usma. Do not merge without human review.`
-            });
+            if (repository.issue.assignees.nodes.some(assignee => assignee.login === copilot.login)) {
+              core.notice(`Copilot is already assigned to issue #${issueNumber}.`);
+              core.setOutput('already-assigned', 'true');
+              return;
+            }
+
+            const issueUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/issues/${issueNumber}`;
+            const instructions = [
+              `Create a planning-only pull request for issue #${issueNumber}: ${issueUrl}`,
+              'Read .github/agents/implementation-plan.agent.md and .github/copilot-instructions.md before planning.',
+              'Create exactly one implementation plan under plan/ using the required plan structure.',
+              'The plan file is the only permitted repository change. Do not implement the planned code or modify other files.',
+              'Include concrete affected paths, validation steps, dependencies, and risks; ground the plan in the issue and repository.'
+            ].join('\n');
+            await github.graphql(
+              `mutation($issueId: ID!, $copilotId: ID!, $repositoryId: ID!, $baseRef: String!, $instructions: String!) {
+                addAssigneesToAssignable(input: {
+                  assignableId: $issueId
+                  assigneeIds: [$copilotId]
+                  agentAssignment: {
+                    targetRepositoryId: $repositoryId
+                    baseRef: $baseRef
+                    customInstructions: $instructions
+                  }
+                }) {
+                  assignable { ... on Issue { number assignees(first: 10) { nodes { login } } } }
+                }
+              }`,
+              {
+                issueId: repository.issue.id,
+                copilotId: copilot.id,
+                repositoryId: repository.id,
+                baseRef: repository.defaultBranchRef.name,
+                instructions,
+                headers
+              }
+            );
+            core.setOutput('already-assigned', 'false');
+        env:
+          ISSUE_NUMBER: ${{ steps.prepare_issue.outputs.result }}
+
+      - name: Comment on issue
+        if: steps.prepare_issue.outputs.result != '' && steps.assign_copilot.outputs.already-assigned != 'true'
+        uses: actions/github-script@v9
+        env:
+          ISSUE_NUMBER: ${{ steps.prepare_issue.outputs.result }}
+        with:
+          github-token: ${{ github.token }}
+          script: |
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: Number(issueNumber),
-              body: `Implementation Planner opened PR #${pr.data.number} for this issue. @usma is assigned as reviewer.`
+              issue_number: Number(process.env.ISSUE_NUMBER),
+              body: `Copilot's planning agent has been assigned. It will open a plan-only PR. CODEOWNERS requests @usma0118 for review.`
             });
-        env:
-          ISSUE_NUMBER: ${{ steps.prepare_issue.outputs.result }}
