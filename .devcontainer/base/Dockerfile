@@ -32,6 +32,7 @@ RUN set -euxo pipefail; \
     tree \
     age sops \
     ansible \
+    util-linux \
     bubblewrap socat slirp4netns \
     iptables iproute2 ipset bind-tools \
     nodejs npm \
